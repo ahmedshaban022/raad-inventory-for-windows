@@ -1,0 +1,192 @@
+<Window x:Class="Raad.Desktop.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  Title="رعد — نموذج إثبات الجدوى" Width="1180" Height="720" MinWidth="360" MinHeight="240"
+  WindowStartupLocation="CenterScreen" Foreground="{StaticResource Raad.Text.Primary}"
+  Background="{StaticResource Raad.Surface.App}" FlowDirection="RightToLeft"
+  FontFamily="{StaticResource Raad.Font.Cairo}" FontSize="{StaticResource Raad.Font.Body}"
+  UseLayoutRounding="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- Brand header -->
+    <Border Grid.Row="0" Background="{StaticResource Raad.Surface.Card}"
+            BorderBrush="{StaticResource Raad.Border.Subtle}" BorderThickness="0,0,0,1">
+      <Grid Margin="18,10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Border Width="44" Height="36" CornerRadius="8" Background="{StaticResource Raad.Surface.Subtle}">
+            <Image Source="/Raad.Inventory.Feasibility;component/Assets/raad-motorcycle.png"
+                   FlowDirection="LeftToRight" Height="28" Stretch="Uniform" Margin="4"/>
+          </Border>
+          <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+            <TextBlock Text="رعد" FontSize="19" FontWeight="Bold" Foreground="{StaticResource Raad.Brand.Deep}"/>
+            <TextBlock Text="بيانات اختبار فقط" FontSize="12" Foreground="{StaticResource Raad.Text.Muted}"/>
+          </StackPanel>
+        </StackPanel>
+
+          <Button x:Name="InspectButton" Grid.Column="1" Content="فحص نقل من أندرويد" Style="{StaticResource Raad.Button.Secondary}"
+                  Click="InspectTransfer" AutomationProperties.AutomationId="InspectTransfer"
+                  AutomationProperties.Name="فحص ملف نقل من أندرويد" Padding="12,6" Margin="12,0,0,0" VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+
+    <!-- Workspace -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  Padding="18,16,18,8" Focusable="False">
+      <Grid x:Name="WorkspaceLayout" SizeChanged="WorkspaceSizeChanged">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="1.05*"/>
+          <ColumnDefinition x:Name="PanelColumnGap" Width="16"/>
+          <ColumnDefinition x:Name="InvoiceColumn" Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition x:Name="PanelRowGap" Height="0"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Product search and work area -->
+        <Border Grid.Column="0" Style="{StaticResource Raad.Card}">
+          <Grid Margin="16">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+              <TextBlock Text="الأصناف" FontSize="20" FontWeight="Bold"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Margin="0,12,0,0">
+              <Label Target="{Binding ElementName=SearchBox}" Content="ابحث باسم الصنف"/>
+              <TextBox x:Name="SearchBox" TextChanged="SearchChanged"
+                       AutomationProperties.AutomationId="ProductSearch" AutomationProperties.Name="بحث الأصناف"/>
+            </StackPanel>
+
+            <TextBlock x:Name="SearchStatus" Grid.Row="2" Margin="0,8,0,0" FontSize="12.5"
+                       Foreground="{StaticResource Raad.Text.Muted}" TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite"
+                       Text="جارٍ البحث في الأصناف التجريبية…"/>
+
+            <Grid Grid.Row="3" Margin="0,8,0,0">
+              <DataGrid x:Name="ProductsGrid" IsReadOnly="True" AutoGenerateColumns="False" HeadersVisibility="Column"
+                        CanUserAddRows="False" EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                        MaxHeight="355" AutomationProperties.Name="نتائج بحث الأصناف" AutomationProperties.AutomationId="ProductResults">
+                <DataGrid.RowStyle>
+                  <Style TargetType="DataGridRow">
+                    <Setter Property="MinHeight" Value="34"/>
+                    <Setter Property="Foreground" Value="{StaticResource Raad.Text.Primary}"/>
+                  </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="الصنف" Binding="{Binding Name}" Width="*"/>
+                  <DataGridTextColumn Header="السعر (ج.م)" Binding="{Binding DisplayPrice}" Width="110"
+                                      CellStyle="{StaticResource Raad.Cell.Latin}" HeaderStyle="{StaticResource Raad.Header.Numeric}"/>
+                  <DataGridTextColumn Header="المتاح" Binding="{Binding Quantity}" Width="80"
+                                      CellStyle="{StaticResource Raad.Cell.Latin}" HeaderStyle="{StaticResource Raad.Header.Numeric}"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <TextBlock x:Name="EmptyState" Text="لا توجد أصناف مطابقة للبحث."
+                         Foreground="{StaticResource Raad.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                         TextWrapping="Wrap" Margin="20" IsHitTestVisible="False" Visibility="Collapsed"/>
+            </Grid>
+          </Grid>
+        </Border>
+
+        <!-- Invoice panel -->
+        <Border x:Name="InvoicePanel" Grid.Column="2" Style="{StaticResource Raad.Card}">
+          <Grid Margin="16">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+              <TextBlock Text="فاتورة الاختبار" FontSize="20" FontWeight="Bold"/>
+            </StackPanel>
+
+            <!-- Generation group: label + line count + strongest action -->
+            <StackPanel Grid.Row="1" Margin="0,12,0,0">
+              <Label Target="{Binding ElementName=LineCount}" Content="عدد البنود"/>
+              <WrapPanel>
+              <ComboBox x:Name="LineCount" Width="108" SelectedIndex="1" Margin="0,0,0,6"
+                        AutomationProperties.Name="عدد بنود فاتورة الاختبار"
+                        AutomationProperties.AutomationId="InvoiceLineCount">
+                <ComboBoxItem>1</ComboBoxItem>
+                <ComboBoxItem>30</ComboBoxItem>
+                <ComboBoxItem>100</ComboBoxItem>
+                <ComboBoxItem>300</ComboBoxItem>
+              </ComboBox>
+              <Button x:Name="GenerateButton" Content="تجهيز الفاتورة"
+                      Style="{StaticResource Raad.Button.Primary}" Click="GenerateInvoice"
+                      AutomationProperties.AutomationId="GenerateInvoice" AutomationProperties.Name="تجهيز فاتورة اختبار"
+                      Margin="10,0,0,6"/>
+              </WrapPanel>
+            </StackPanel>
+
+            <!-- Preview actions and page navigation -->
+            <WrapPanel Grid.Row="2" Margin="0,6,0,0">
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,6">
+                <Button x:Name="PreviousButton" Content="السابق" Style="{StaticResource Raad.Button.Secondary}"
+                        Click="PreviousPage" IsEnabled="False" Padding="12,6"
+                        AutomationProperties.AutomationId="PreviousPage" AutomationProperties.Name="الصفحة السابقة"/>
+                <TextBlock x:Name="PageLabel" Text="—" FlowDirection="LeftToRight" VerticalAlignment="Center" Margin="10,0"
+                           FontWeight="SemiBold" Foreground="{StaticResource Raad.Text.Primary}"
+                           AutomationProperties.LiveSetting="Polite"/>
+                <Button x:Name="NextButton" Content="التالي" Style="{StaticResource Raad.Button.Secondary}"
+                        Click="NextPage" IsEnabled="False" Padding="12,6"
+                        AutomationProperties.AutomationId="NextPage" AutomationProperties.Name="الصفحة التالية"/>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                <Button x:Name="PrintButton" Content="طباعة" Style="{StaticResource Raad.Button.Secondary}"
+                        Click="PrintInvoice" IsEnabled="False" Padding="12,6"
+                        AutomationProperties.AutomationId="PrintInvoice" AutomationProperties.Name="طباعة الفاتورة"/>
+                <Button x:Name="ExportButton" Content="حفظ" Style="{StaticResource Raad.Button.Secondary}"
+                        Click="ExportInvoice" IsEnabled="False" Padding="12,6" Margin="8,0,0,0"
+                        AutomationProperties.AutomationId="ExportButton" AutomationProperties.Name="حفظ الفاتورة PDF أو صور"/>
+                <Button x:Name="ZoomButton" Content="تكبير" Style="{StaticResource Raad.Button.Secondary}"
+                        Click="ToggleZoom" IsEnabled="False" Padding="12,6" Margin="8,0,0,0"
+                        AutomationProperties.AutomationId="PreviewZoom"/>
+              </StackPanel>
+            </WrapPanel>
+
+            <!-- Preview -->
+            <Border Grid.Row="3" Background="{StaticResource Raad.Surface.Subtle}" BorderBrush="{StaticResource Raad.Border.Subtle}"
+                    BorderThickness="1" CornerRadius="8" Margin="0,4,0,0" Height="348">
+              <Grid>
+                <ScrollViewer x:Name="PreviewScroller" FlowDirection="LeftToRight" Padding="10" Focusable="False"
+                              HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled">
+                  <Image x:Name="PreviewImage" Stretch="Uniform" AutomationProperties.Name="معاينة صفحة الفاتورة"/>
+                </ScrollViewer>
+                <TextBlock x:Name="PreviewPlaceholder" Text="لم تُجهز فاتورة بعد. اختر عدد البنود ثم ابدأ التجهيز."
+                           Foreground="{StaticResource Raad.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           TextWrapping="Wrap" Margin="24" IsHitTestVisible="False"
+                           AutomationProperties.Name="لا توجد معاينة"/>
+              </Grid>
+            </Border>
+          </Grid>
+        </Border>
+      </Grid>
+    </ScrollViewer>
+
+    <!-- Operation feedback -->
+    <Border Grid.Row="2" Background="{StaticResource Raad.Surface.Card}"
+            BorderBrush="{StaticResource Raad.Border.Subtle}" BorderThickness="0,1,0,0" Padding="18,8">
+        <TextBlock x:Name="OperationStatus" Text="جاهز." FontSize="12.5" Foreground="{StaticResource Raad.Text.Secondary}"
+                   TextWrapping="Wrap" VerticalAlignment="Center"
+                   AutomationProperties.LiveSetting="Polite"/>
+    </Border>
+  </Grid>
+</Window>

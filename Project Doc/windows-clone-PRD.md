@@ -1,193 +1,270 @@
-# UA Invoices for Windows
+# رعد للمخزون والمبيعات — Windows
 
-**Product requirements document · v1 · 18 November 2026**
+**وثيقة متطلبات المنتج · الإصدار 1.0 · 18 نوفمبر 2026**
 
-| Item | Decision |
+**الحالة: معتمد، ومرحلة إثبات الجدوى جارية.** القرارات العشرون أدناه هي خط الأساس للتنفيذ. يوثّق [سجل إثبات الجدوى](../.scratch/raad-windows/feasibility.md) النتائج المتاحة والاختبارات المتبقية.
+
+| البند | المتطلب المعتمد |
 | --- | --- |
-| Product | Standalone Windows desktop clone of UA Invoices for Android |
-| Project | New public GitHub repository, separate from the Android app and the original Windows app |
-| Target | Windows 11 x64 and Windows 10 22H2 x64 |
-| Interface | Arabic, right to left, with keyboard and mouse support |
-| Data | Per-user local SQLite. Core workflows operate offline. |
-| Migration | One-time replacement import from Android or original Windows backups, with safety backup and recovery |
-| Distribution | Per-user Windows setup `.exe` from the new repository’s GitHub Releases page |
+| المنتج | Raad Inventory — رعد للمخزون والمبيعات على ويندوز |
+| المرجع الوظيفي | رعد الحالي لأندرويد، مع استثناءات ويندوز المحددة هنا |
+| المنصة | Windows 10 وWindows 11 بنظام x64 |
+| الجهاز المرجعي | معالج ثنائي النواة، RAM ‏4GB، وقرص HDD؛ توثيق الطراز وإصدار النظام عند الاختبار |
+| الاستخدام | مستخدم واحد على كمبيوتر واحد، والعمل الأساسي بالكامل دون إنترنت |
+| التقنية | C# + WPF + SQLite؛ تثبيت إصدار .NET ومحرّك PDF بعد اختبار الجدوى |
+| اللغة والعملة | واجهة عربية باتجاه RTL، وأرقام لاتينية كما في رعد، والجنيه المصري EGP |
+| البيانات | تخزين محلي لكل حساب ويندوز، مستقل عن ملفات البرنامج وعن تطبيق أندرويد |
+| النقل | استيراد اختياري مرة واحدة من رعد لأندرويد، يستبدل بيانات ويندوز |
+| المستندات | معاينة وPDF وPNG وJPG وطباعة A4 عبر نافذة طباعة ويندوز |
+| التوزيع | مثبت `.exe` يعمل دون إنترنت، ومستودع GitHub مستقل عام وGitHub Releases |
+| التحديث | تشغيل المثبت الأحدث يدويًا مع حفظ البيانات ونسخة أمان قبل ترقية القاعدة |
 
-## 1. Product goal and release scope
+## 1. الغرض وحدود الوثيقة
 
-Build an invoicing application for a small-business operator who enters customer details per sale and draws from a large product catalog. The operator can create and recover drafts, issue each invoice once, find it later, and deliver a professional Arabic A4 document as a PDF, a set of images, or a printout.
+يستخدم صاحب النشاط رعد لتسجيل الأصناف والكميات، وإصدار فواتير البيع، ومتابعة العملاء والمديونيات والتحصيلات، وتصحيح الأخطاء مع بقاء تاريخ العمليات مفهومًا. نسخة ويندوز تنقل هذه الوظائف إلى شاشة وكيبورد وماوس، وتضيف نسخًا احتياطيًا محليًا وطباعة ويندوز ونقلًا من الهاتف.
 
-Use the Android app as the baseline for invoice behavior, draft recovery, products, settings, and document design. Use the original Windows project as a reference for desktop interaction, Windows integration, and legacy data formats. Preserve the invoice’s appearance while adapting the editor to a wide screen and keyboard. The original Windows application and the clone can coexist on one computer with separate data directories and installers. The Android verification report records that in-app printing was removed from the Android release. This Windows release has its own native printer requirement and acceptance test.
+هذه الوثيقة تحل محل متطلبات UA Invoices التي كانت في الملف نفسه. احتُفظ بالمصدر القديم في [أرشيف مرجعي غير ملزم](archive/ua-invoices-PRD.reference.md). لا تُستخدم قواعد UA لترقيم الفواتير أو حساب الكميات أو تنسيقات النسخ الاحتياطية أو حذف الفواتير.
 
-**Included in v1.** Invoice editor, recoverable drafts, issued history, duplication, Trash, product catalog, workbook import/export, seller and document preferences, A4 preview/PDF/PNG/JPG/print, local backup and restore, migration from both existing applications, and clean installation and in-place upgrades.
+المصطلحات في [GLOSSARY.md](../GLOSSARY.md)، وأسباب الاختيارات في [قرارات المعمارية](../docs/adr/0001-raad-windows-offline-scope.md). عند اختلاف سلوك أندرويد مع استثناء صريح هنا، يُطبّق استثناء ويندوز. أي انحراف جديد عن النطاق أو معايير القبول يُعرض بوضوح قبل اعتماده.
 
-**Outside v1.** Accounts, cloud sync, multi-user access, database merge, customer profiles, inventory quantities, payments, accounting, tax authority and e-invoicing integrations, bulk invoice deletion, and in-app update checks or downloads.
+## 2. نطاق الإصدار الأول
 
-**Release success.** A user installs the downloaded setup while offline, imports either supported source, completes the invoice workflow while disconnected, and installs a later version over the first with the same local records and settings. A physical A4 printout passes the document checks in Section 7.
+### داخل النطاق
 
-## 2. Windows interface and navigation
+- اليوم: المبيعات والتحصيلات والمديونيات، مع التمييز بين معانيها.
+- الأصناف: البيانات الحالية، السعر، حد انخفاض المخزون، الإضافة والتصحيح، سجل الحركة، الأرشفة والاستعادة.
+- العملاء: الاسم والهاتف الاختياري، الأرصدة، الفواتير والتحصيلات، والأرشفة والاستعادة.
+- مسودة بيع واحدة قابلة للاسترجاع، من الأصناف المسجلة فقط، ثم إصدار فاتورة مرة واحدة.
+- سجل الفواتير والتفاصيل والتحصيل وتصحيح المدفوعات والإلغاء بشروطه، مع الاحتفاظ بالفواتير الصادرة.
+- واجهة عربية بهوية رعد، وتفضيلات المظهر المناسبة لويندوز.
+- معاينة الفواتير الصادرة وتصديرها وطباعتها، ونسخ احتياطي واستعادة آمنة.
+- تحديث محدود لأندرويد يضيف تصدير بيانات العمل للنقل، واستيرادها في ويندوز.
+- تفعيل أول مرة دون إنترنت، وقفل خصوصية اختياري منفصل مع الاسترداد.
+- تثبيت نظيف، وتحديث يدوي، ودليل عربي وتقرير تحقق وإصدار مستقل.
 
-| Screen | Required behavior |
+### مؤجّل من الإصدار الأول
+
+تعدد المستخدمين والأجهزة، مشاركة المخزون بالشبكة، المزامنة والسحابة، دمج مجموعات البيانات، العملات المتعددة، الكميات الكسرية، البنود الحرة خارج الأصناف، المسودات المتعددة، الخصومات، ملاحظات وشروط الفاتورة، Excel والاستيراد/التصدير بالجداول، SKU والباركود، المشتريات والموردون وتكلفة الشراء، مرتجعات البيع ورد الأموال، المحاسبة العامة والتكاملات الضريبية، الطابعات الحرارية، وتحديث التطبيق تلقائيًا.
+
+الحذف النهائي للفواتير الصادرة غير متاح في ويندوز. قفل الخصوصية لا يشفّر قاعدة البيانات أو النسخ الاحتياطية. نقل بيانات UA Invoices أو تطبيقات أخرى ليس ضمن النقل من رعد.
+
+## 3. الواجهة وتجربة سطح المكتب
+
+| الشاشة | الوظائف |
 | --- | --- |
-| **فاتورة جديدة** — New Invoice | Enter customer and date, add catalog and manual lines, set discount, add notes and terms, save, preview, and issue. |
-| **سجل الفواتير** — History | Switch between issued invoices and drafts. Search and filter, resume a draft, open an issued document, duplicate an invoice, or move a record to Trash. |
-| **الأصناف** — Products | Search, add, edit, and soft-delete products. Import a workbook, export the catalog, or save a template. |
-| **الإعدادات** — Settings | Manage company details, brand, currency, date format, reusable terms, and backups. Show the installed version and a link to GitHub Releases. |
-| **المحذوفات** — Trash | Separate invoices, drafts, and products. Restore any of them. Permanently delete invoices or drafts after a separate confirmation. |
-| **معاينة الفاتورة** — Preview | Fit to page or width, zoom, and navigate pages. Save PDF or images, print, and reveal saved files in Explorer. Offer a return to editing from a draft preview. |
+| اليوم | مبيعات اليوم، تحصيلاته الفعالة، المديونيات عبر كل التواريخ، والأرصدة غير المرتبطة بعميل معروف |
+| المخزون | بحث وقوائم محدودة/مقسمة، إضافة وتعديل صنف، كمية متاحة، تنبيه انخفاض، إضافة مخزون وتصحيحه، سجل حركة وأرشيف |
+| الفواتير | بدء/استكمال المسودة الحالية، سجل الفواتير، تفاصيل البيع والمدفوعات، التحصيل والتصحيح والإلغاء والمستندات |
+| العملاء | بحث وإضافة وتعديل، هاتف اختياري، رصيد العميل وفواتيره، وربط الرصيد غير المعروف والأرشيف |
+| الإعدادات | المظهر، حالة التفعيل والقفل، النسخ الاحتياطي والاستعادة والنقل، الإصدار ورابط Releases |
+| معاينة الفاتورة | تكبير وتنقل بين الصفحات، تصدير PDF/صور، طباعة، وفتح مكان الملف المحفوظ |
 
-- Use right-side navigation, a wide line-item grid, and inline product suggestions. Place customer details above the grid. Keep the total and primary actions accessible when the grid grows.
-- Start with a `1280 × 840` logical window and support a `940 × 620` logical minimum where the work area allows. On smaller effective work areas, compact the navigation and allow scrolling so save, issue, and validation actions stay usable at high DPI.
-- Use bundled Cairo, the supplied blue SVG, `#0b68e6` as the default accent, `#faf7f2` as the workspace background, and white surfaces. Use concise Arabic labels and errors. Isolate invoice numbers, SKUs, dates, phone numbers, and monetary values from surrounding RTL text where direction matters.
-- Support visible keyboard focus, logical Tab order, and modal focus return. Suggestions support Arrow keys, Enter, Escape, and Tab. Selecting a product fills its name and price and moves focus to quantity. `Ctrl+S` saves the active draft, `Ctrl+N` starts a new draft after handling pending edits, and `Ctrl+P` prints from preview. Issue remains an explicit action.
-- Label inputs and announce save state, validation failures, and dialog titles to Windows Narrator. Show loading, empty, error, and retry states. Show progress or a busy state for long operations and guard against double submission.
+- الحفاظ على اسم رعد وشعاره وهوية الدراجة النارية؛ لا يُنسخ شعار UA أو ألوانه باعتبارها متطلبات رعد.
+- واجهة WPF مناسبة للشاشات الواسعة، مع جدول بنود واضح وإجراءات الحفظ والإصدار والإجمالي سهلة الوصول.
+- النافذة قابلة لتغيير الحجم وتلائم مساحة العمل. اختبار شاشة 1366×768 والتحجيم 100% و125% و150% و200%، مع تمرير/تكييف يمنع اختفاء الإجراءات الأساسية.
+- ترتيب Tab منطقي، تركيز ظاهر، إعادة التركيز بعد الحوارات، ودعم Narrator والتسميات والأخطاء العربية. الأسماء العربية واللاتينية والأرقام المختلطة تحافظ على اتجاهها الصحيح.
+- دعم الكيبورد في البحث واختيار الصنف والتنقل بين الخانات، و`Ctrl+S` لحفظ المسودة و`Ctrl+P` للطباعة من المعاينة. بدء فاتورة يستكمل المسودة القائمة بدل إنشاء مسودة ثانية.
+- حالات واضحة للتحميل والفراغ والخطأ وإعادة المحاولة، وحفظ جارٍ/محفوظ/فشل. العمليات الطويلة لا تجمّد الواجهة، مع تقدم أو حالة انشغال ومنع تكرار الإجراء.
 
-## 3. Invoice, catalog, and settings requirements
+## 4. العقود الوظيفية لرعد
 
-### INV-01 · Create and calculate an invoice
+### R-01 — المال والكميات
 
-Start with today’s local calendar date and one empty line. Collect customer name, optional phone, ordered items, one optional discount, optional notes, and zero or more reusable terms. A line stores a product reference when applicable, name, quantity, and unit price. Free-text items and catalog selections can coexist. Editing a line’s price affects that line only. Removing the last row leaves an editable placeholder.
+الأسعار والتحصيلات مبالغ دقيقة بالجنيه والقرش، والكميات وحدات صحيحة. تقبل المدخلات الأرقام الغربية والعربية والفارسية وفق عقد رعد الحالي، مع الاحتفاظ بالنص الخام في المسودة عند عدم اكتماله. تُحفظ الأموال بوحدات صغرى صحيحة وتُجرى الحسابات بتحقق من الحدود والفيض؛ لا تُستخدم أعداد عائمة للحساب المالي.
 
-Issue requires a valid calendar date, a nonblank customer name, and at least one named line with positive quantity and nonnegative price. Ignore wholly untouched placeholder rows and identify partially completed rows by field. Cap newly entered customer and item names at 300 characters. Preserve longer historical values in imported issued records. Accept international phone formats and keep the displayed phone text as entered.
+إجمالي البند = الكمية الصحيحة × سعر الوحدة، وإجمالي الفاتورة = مجموع بنودها. تُحافظ اختبارات المطابقة على حدود وقواعد التحليل الحالية في رعد. الأسعار غير سالبة، وكميات البيع موجبة، ولا يُسمح بنتيجة مخزون سالبة أو تجاوز الحدود. السعر المعدّل داخل بند البيع لا يغيّر سعر الصنف الأساسي.
 
-Use one Rust calculation path for the editor, draft preview, and issue. Store money as signed 64-bit integer minor units, quantity as integer thousandths, and percentage as integer hundredths of one percent. Use wider intermediates and reject overflow. Transfer scaled integers and record IDs across the webview boundary as decimal strings. Preserve the Android parser’s behavior for Western, Arabic-Indic, and Persian digits, decimal separator normalization, half-up scaling for money and quantity, and percentage truncation to hundredths. A single comma in money input with no dot is a decimal mark. Quantity and percentage treat commas as grouping marks and accept a dot or Arabic decimal mark for fractions. Validate a percentage against 0–100 before truncation.
+### R-02 — المخزون والأرشفة
 
-| Calculated field | Rule |
+الرصيد مشتق من حركات المخزون: افتتاحي، إضافة، تصحيح، بيع، وإلغاء. الإضافة كمية موجبة. التصحيح يدخل الكمية الفعلية غير السالبة وسببًا؛ تُحفظ حركة بالفرق عند تغير الرصيد، وقد تكون سالبة ما دامت النتيجة صحيحة. لا تُنشأ حركة عندما لم تتغير الكمية.
+
+يعد المخزون منخفضًا عندما تكون الكمية المتاحة أقل من حد التنبيه أو مساوية له، بما فيها الصفر؛ والكمية صفر تعني أيضًا نفاد المخزون.
+
+الأرشفة تخفي الصنف أو العميل من الاختيارات الجديدة وتُبقي التاريخ والأرصدة، مع إمكان الاستعادة. تمنع مراجع المسودة المفتوحة أرشفة الصنف/العميل حتى معالجة المسودة. تحفظ الهوية بمعرفات مستقرة، ويظل تطابق أسماء العملاء مسموحًا كما في رعد.
+
+### R-03 — المسودة والحفظ والإصدار
+
+توجد مسودة واحدة مفتوحة، وبند واحد لكل صنف مختار. تحفظ المسودة ترتيب البنود والمدخلات الخام للكمية والسعر والدفعة الأولى واختيار العميل. يمكن استكمالها بعد الإغلاق أو الانقطاع؛ لا تغيّر مخزونًا أو تحصيلًا قبل الإصدار.
+
+يحفظ التطبيق التعديلات أثناء العمل ويُتم الحفظ قبل مغادرة المحرر أو الإغلاق المعتاد. عند فشل الحفظ يبقى الإدخال ظاهرًا ويُعرض إعادة المحاولة أو تجاهل صريح؛ لا يُعرض نجاح حفظ غير متين.
+
+قبل الإصدار يُعاد التحقق من الصنف والعميل والمخزون والأسعار والمدفوع داخل معاملة كتابة مسلسلة. تلتزم المعاملة بالفاتورة ولقطات البنود وخصم المخزون والدفعة الأولى واستهلاك المسودة وحالة الاسترجاع معًا؛ الفشل يُرجعها كلها. إعادة طلب الإصدار لنفس المسودة ترجع الفاتورة الأصلية بدل تكرار البيع، ويعالج بدء التشغيل الإصدار المنقطع/المعلق.
+
+### R-04 — هوية الفاتورة والتحصيل
+
+تحافظ الفواتير الجديدة على شكل رعد الكامل: `INV-YYYYMMDD-<20 uppercase UUID hex characters>`، وتظل المراجع المستوردة كما هي. يمكن اختصار العرض في القوائم مع إتاحة المرجع الكامل في التفاصيل والمستندات. لا يُستبدل ذلك بتسلسل UA من نوع `INV-000001`.
+
+تلتقط الفاتورة وقت البيع واسم العميل الأصلي وأسماء البنود وكمياتها وأسعارها وإجماليها. الدفعة الأولى من صفر إلى الإجمالي؛ الخانة الفارغة/الصفر لا تنشئ قيد تحصيل. الرصيد المتبقي الموجب يتطلب عميلًا معروفًا؛ لذلك يكون البيع دون اسم عميل مسددًا بالكامل عند إصداره، بما فيه البيع ذي الإجمالي صفرًا.
+
+التحصيلات اللاحقة لا تتجاوز المتبقي وتُحفظ ضمن سجل الفاتورة. يُحسب المدفوع من التحصيلات الفعالة، والمتبقي = قيمة البيع الفعال ناقص المدفوع. الربط اللاحق لمديونية غير معروفة يحفظ لقطة العميل الأصلية للفاتورة ويضيف ارتباط الحساب دون إعادة كتابة البيع.
+
+الفاتورة الفعالة ذات الإجمالي صفرًا تُعد مسددة. فيما عدا ذلك، تتحدد حالة غير مسددة/مسددة جزئيًا/مسددة من المدفوع الفعال مقارنة بالإجمالي. المتبقي على الفاتورة الملغاة صفر، مع بقاء حالتها وتاريخها ظاهرين.
+
+### R-05 — التصحيح والإلغاء وحفظ التاريخ
+
+تصحيح مبلغ سُجل بالخطأ يكون بعكس القيد الأصلي وسبب، مع قيد بديل اختياري، داخل معاملة واحدة. يحتفظ البديل بتاريخ التحصيل الأصلي، ويُسجل وقت التصحيح الفعلي أيضًا؛ يظل القيد الأصلي والعكس والسبب قابلين للفهم.
+
+يُرفض تصحيح قيد معكوس بالفعل أو تحصيل على فاتورة ملغاة، كما يُرفض أي تصحيح يجعل مجموع التحصيلات الفعالة يتجاوز إجمالي الفاتورة.
+
+الإلغاء متاح فقط عندما لا توجد تحصيلات فعالة. يحفظ الفاتورة في السجل ويعيد المخزون مرة واحدة، مع التحقق من الحدود والمعاملة والتكرار. لا يُستخدم تصحيح تسجيل تحصيل كبديل لعملية رد أموال حقيقية؛ مرتجعات البضاعة ورد الأموال خارج v1.
+
+الفواتير الصادرة، بما فيها الملغاة، لا تُحذف نهائيًا. تبقى آثار الحذف التاريخية الموجودة في المصدر عند النقل وفق القسم 7؛ لا تُحوَّل إلى فواتير أو مدفوعات تقديرية.
+
+### R-06 — اليوم والمديونيات
+
+مبيعات اليوم هي إجمالي الفواتير غير الملغاة الصادرة ضمن اليوم المحلي من منتصف الليل إلى منتصف الليل التالي. تحصيلات اليوم هي المدفوعات الفعالة التي يقع تاريخ استلامها ضمن اليوم؛ المبيعات والتحصيلات قيمتان مستقلتان.
+
+تعرض المديونيات عبر كل التواريخ مجموع المتبقي وعدد الفواتير ذات الرصيد، مع إجمالي الأرصدة غير المعروفة. تظهر فواتير العميل المرتبطة عند الإصدار أو عبر ربط لاحق، دون فقد تاريخ التصحيحات. تُختبر حدود منتصف الليل وتصحيح تحصيل في يوم لاحق.
+
+## 5. مستندات A4 والمعاينة والتصدير والطباعة
+
+### D-01 — المعنى والتصميم
+
+تخص المعاينة والتصدير والطباعة الفواتير الصادرة. تحافظ على تصميم رعد العربي وهوية الشعار ومقاس A4 الرأسي، بخط عربي محلي مرفق وترخيص مناسب. تظهر هوية رعد، مرجع الفاتورة، وقت البيع الأصلي، العميل الأصلي، الحالة، وأعمدة الصنف والكمية والسعر والإجمالي.
+
+تبقى حقائق البيع ثابتة. يعرض المستند المدفوع والمتبقي الفعّالين عند أخذ لقطة التصدير، مع عبارة واضحة «موقف السداد بتاريخ …». مثال القبول: بيع 1000، وتحصيل 200 ثم 300، يعاد تصديره بمدفوع 500 ومتبقي 500 مع بقاء البيع الأصلي كما هو. تتسق كل صفحات المستند مع لقطة واحدة، حتى لو حدث تحصيل جديد أثناء تجهيزه.
+
+### D-02 — مصدر واحد للمخرجات
+
+يُنشأ PDF عربي متعدد الصفحات بنص قابل للتحديد والاستخراج، ثم يُستخدم PDF نفسه للمعاينة وصور الصفحات والطباعة. تتكرر رؤوس الجدول المناسبة، وتظهر البنود بالترتيب وكل بند مرة واحدة والإجمالي مرة واحدة، مع ترقيم الصفحات ومنع القص والتداخل والصفحات الزائدة. تُختبر الأسماء الطويلة والنصوص المختلطة حتى 300 سطر، ولا يغيّر تكبير النافذة أو DPI تقسيم الصفحات.
+
+يُحسم محرّك PDF في مرحلة الجدوى: مرشح .NET مناسب أولًا، ثم WebView2 عند الحاجة لتوليد المستند فقط. يُفحص ترخيص الإصدار المختار وتوافق العربية قبل تثبيته. تبقى واجهة التطبيق WPF، وتدخل كل عمليات المحرّك المساعدة في قياس موارده.
+
+### D-03 — الملفات والطباعة
+
+- اختيار وجهة أصلية بويندوز: PDF واحد أو PNG/JPG مرتبة لكل صفحة، بأسماء تعتمد المرجع الكامل ورقم الصفحة. JPG بخلفية بيضاء، ودقة واضحة مناسبة للطباعة، ثابتة بين مرات التصدير.
+- تأكيد الاستبدال، وتجهيز المخرجات قبل نشرها، وتنظيف الملفات المؤقتة والإبلاغ عن أي بقايا عند الفشل. الإلغاء أو امتلاء القرص لا يغير الفاتورة. إتاحة فتح المجلد ونسخ المسار.
+- نافذة طباعة ويندوز لاختيار الطابعة ونطاق الصفحات والنسخ، مع A4 رأسي وتحجيم متناسب داخل المساحة القابلة للطباعة.
+- التفريق بين إلغاء المستخدم وفشل الإرسال وتسليم المهمة للطابعة. يجب التحقق من نسخة ورقية فعلية؛ الطباعة الافتراضية وحدها لا تثبت ذلك.
+- معالجة الصفحات والصور تدريجيًا وبذاكرة مؤقتة محدودة، بدل الاحتفاظ بكل صور المستند عالية الدقة في الذاكرة.
+
+## 6. النسخ الاحتياطي والاستعادة
+
+### B-01 — إنشاء النسخ والاحتفاظ بها
+
+تُستخدم آلية SQLite متسقة لنسخ قاعدة البيانات، مع ملف تعريف للمنتج وإصدار تنسيق الأرشيف وإصدار المخطط والتطبيق ووقت الإنشاء وبصمات تحقق للحمولات. تضم النسخة بيانات العمل والأصول اللازمة لها فقط؛ تُستبعد حالة التفعيل وكلمات مرور القفل ورموز استرداده وإعدادات الوصول الخاصة بالتثبيت.
+
+تتوفر نسخة يدوية إلى مجلد يختاره المستخدم. يُنشئ التطبيق نسخة تلقائية ناجحة واحدة في اليوم المحلي عند الفتح أو استعادة التركيز أو تغير اليوم وهو مفتوح. تُنسق الكتابات والنسخ دون تجميد الواجهة، ويُعاد تنفيذ النسخة المستحقة بعد الفشل في فرصة لاحقة مع تنبيه وحالة آخر نجاح حقيقية.
+
+يُحتفظ بآخر سبع نسخ تلقائية مكتملة ومتحقق منها. لا يحذف الاحتفاظ النسخ اليدوية أو أحدث نسخة أمان قبل الاستعادة، ولا يستبدل النجاح السابق بمحاولة ناقصة. النسخ المحلية تساعد على استرجاع الأخطاء؛ يوضّح الدليل حفظ نسخة خارج القرص للتعافي من تلفه.
+
+### B-02 — فحص واستبدال قابل للاسترجاع
+
+تُنسخ المدخلات إلى مساحة تجهيز خاصة قبل الفحص. يُرفض الأرشيف غير المدعوم أو التالف أو ذو المسارات غير الآمنة أو الأحجام غير المقبولة، وتُفحص سلامة SQLite والعلاقات وقواعد المجال والبصمات. تُعرض هوية المصدر والإصدارات والتواريخ المتاحة والأعداد والأرصدة والتحذيرات قبل التأكيد.
+
+الاستعادة تستبدل بيانات الوجهة ولا تدمجها. بعد التأكيد تُوقف الكتابات الجديدة مؤقتًا، وتؤخذ نسخة أمان متحققة، وتُحوّل النسخة المجهزة وتُفحص قبل تفعيلها. يضمن سجل استرجاع وتبديل متين على نفس وحدة التخزين أن يعيد الانقطاع فتح مجموعة كاملة قديمة أو بديلة متحققة. الفشل يُبقي البيانات السابقة ونسخة الأمان والمصدر متاحة.
+
+لا تمس استعادة بيانات العمل قفل الخصوصية أو التفعيل الحاليين. تُختبر استعادة بعد تثبيت نظيف وبعد ترقية، وفساد الملف ورفض الكتابة وقلة المساحة والانقطاع أثناء التبديل.
+
+## 7. النقل من رعد لأندرويد وانتقال العمل
+
+النقل ميزة اختيارية في v1، ويشمل تنفيذ تحديث محدود لتطبيق أندرويد يضيف تصديرًا متسقًا لبيانات رعد يمكن مشاركته كملف. لا يعتمد النقل على استخراج غير مضمون لقاعدة هاتف إنتاجي أو على PDF/صور الفواتير أو نسخ UA.
+
+البداية بإصدار رعد الحالي الذي راجعناه، مخطط SQLite رقم 8. يعرّف المصدر إصدار التصدير والمخطط؛ تُضاف محولات أخرى فقط بعد فحص ملفاتها واختبارها. يحافظ النقل على مجموعة البيانات وEGP والأصناف والأرشيف وحركات المخزون والعملاء والهواتف والفواتير وبنودها ومراجعها والمدفوعات وعكسها وروابط العملاء والمسودة وحالة الإصدار اللازمة لمنع التكرار.
+
+تظل معرفات وسجلات المصدر محفوظة أو محولة بخريطة موثقة تحافظ على العلاقات. تُقارن الأعداد والمخزون والإجماليات والتحصيلات الفعالة والمديونيات والمراجع بين المصدر والنسخة المحولة قبل الاستبدال. إعدادات الوصول الخاصة بالهاتف لا تُنقل، وإعدادات تثبيت ويندوز تبقى مستقلة.
+
+قد توجد حركات مخزون شرعية باقية بعد حذف فاتورة نهائيًا في أندرويد. تُحفظ هذه الآثار وتُعرض تحذيرات نقص التاريخ أثناء الفحص؛ لا تُنشأ فواتير أو تحصيلات تخمينية، ولا تُرفض هذه الحالة المعروفة باعتبارها فسادًا بذاتها. السجلات التالفة الأخرى أو التحويل غير الممكن يوقفان الاستيراد مع تحديد السبب.
+
+**إجراء التسليم:** يوقف المستخدم عمليات أندرويد عند التصدير، ويفحص ويندوز الملف، ويؤكد الاستبدال بعد نسخة الأمان، ويراجع الأرصدة، ثم يكمل التسجيل على ويندوز وحده. أندرويد يبقى تثبيتًا مستقلاً؛ تعديلاته اللاحقة لا تُدمج ولا تتزامن. يُشرح الإجراء في الواجهة والدليل العربي.
+
+## 8. التفعيل وقفل الخصوصية
+
+- التفعيل الأول بكلمة مرور دون إنترنت، مستقل عن بيانات العمل وقفل الخصوصية. لا يحتاج الاستخدام المعتاد حسابًا أو خادم ترخيص.
+- القفل اختياري ومعطل افتراضيًا، بكلمة مرور منفصلة، مع زر قفل وقفل عند قفل جلسة ويندوز. يحمي الوصول من الواجهة على حساب ويندوز الشخصي؛ قاعدة البيانات والنسخ غير مشفرة في v1.
+- عند تفعيل القفل يُعرض رمز استرداد يحتفظ به المستخدم. تُخزن بيانات تحقق مناسبة بدل كلمات المرور كنص صريح، ولا تُضمّن الأسرار أو بيانات العملاء في المستودع أو الاختبارات أو الإصدارات.
+- عند نسيان كلمة المرور يستخدم رمز الاسترداد. عند فقد الاثنين يتوفر إجراء دعم محلي موثّق لصاحب حساب ويندوز يعيد ضبط قفل الخصوصية فقط، مع حفظ البيانات وحالة التفعيل.
+- الاستيراد والاستعادة العاديان لا يعطلان القفل ولا يفعّلان تثبيتًا جديدًا اعتمادًا على بيانات العمل المنقولة. تُختبر الاستعادة والاسترداد وتغيير كلمة المرور مع بيانات فعلية اصطناعية.
+
+## 9. الهندسة والأداء
+
+تُفصل واجهة WPF عن منطق المجال وخدمات البيانات والمستندات والتكامل مع ويندوز. الحسابات والتحقق والإصدار والتصحيح سلطتها طبقة المجال؛ لا تصبح القيم المعروضة في الواجهة مصدرًا نهائيًا للإجماليات أو الرصيد.
+
+SQLite محلية، مع معاملات وحدود مدخلات وفهارس وترقيات إصدارية وعلاقات مفعّلة، وكتابات مسلسلة ونسخة تشغيل واحدة لكل حساب ويندوز ومجموعة بيانات. تخزن البيانات خارج مجلد البرنامج في مسار مستقل للمستخدم. يثبت معرّف وعائلة تثبيت رعد قبل أول إصدار عام، ويستمران عبر الترقيات.
+
+تُقسم الاستعلامات وتُفهرس، وتستخدم القوائم إعادة استخدام عناصر الواجهة؛ لا تُحمّل كل السجلات لمجرد أن المعروض قليل. أعمال القاعدة والنسخ والتحويل والتصدير خارج مسار تفاعل الواجهة، مع تنسيق يمنع السباقات والحفظ القديم وتكرار الإصدار. الذاكرة والسرعة تُقاسان؛ اختيار C# ليس ادعاءً بقياسات محققة أو بأفضلية مطلقة على كل واجهات Rust.
+
+| المقياس | معيار القبول على الجهاز المرجعي |
 | --- | --- |
-| Line total | Round `quantity_thousandths × unit_price_minor ÷ 1000` half-up to minor units. |
-| Total quantity | Sum line quantities. |
-| Subtotal | Sum rounded line totals. |
-| Discount | Fixed amount between zero and subtotal, or round `subtotal_minor × percent_hundredths ÷ 10000` half-up. |
-| Grand total | Subtotal minus discount. |
+| حجم اختبار البيانات | 10,000 صنف و100,000 فاتورة مع بنود وحركات وقيود تحصيل وتصحيحات واقعية موثقة |
+| بدء التطبيق حتى شاشة قابلة للاستخدام | خلال 5 ثوانٍ |
+| البحث | 95% من العمليات خلال 200 ms، باستثناء مهلة انتظار الكتابة |
+| الذاكرة أثناء العمل المعتاد | حد مستهدف لا يزيد على 300 MB، مع احتساب عمليات التطبيق المساعدة |
+| اختبار المستندات | 1 و30 و100 و300 سطر، ومعالجة الصور صفحة بصفحة |
 
-Show the line totals, total quantity, subtotal, discount when applied, and grand total. Keep invalid input visible with a field error and block issue. For example, `0.5 × 0.05` yields `0.03`, and `10%` off `5.05` yields a `0.51` discount and a `4.54` grand total.
+هذه أحجام اختبار وليست حدًا لعدد السجلات. تُوثق طريقة قياس البداية الباردة والبحث والذاكرة، وحجم البنود والمدفوعات، وإصدار التطبيق والنظام والمعالج والقرص. تُقاس ذروة ومدة تجهيز المستندات منفصلتين عن حد العمل المعتاد، مع كل عمليات المحرّك. جهاز تطوير أقوى أو VM على تخزين أسرع لا يثبت وحده أداء الجهاز المرجعي.
 
-### INV-02 · Save, recover, and issue
+إصدار .NET ومكتبة PDF وتراخيصهما نتائج مرحلة جدوى محكومة بـ[خطة التحقق](../.scratch/raad-windows/feasibility.md). اختبار توافق ويندوز 10 لا يغيّر سياسة الدعم الرسمية لـMicrosoft؛ يُذكر إصدار النظام والنتائج والسياسة بوضوح في تقرير الإصدار. لا تُخفف أهداف الأداء أو العربية أو أمان البيانات تلقائيًا عند تعثر مرشح تقني.
 
-- Give each draft a stable key and retain raw editable input, selected term text, currency, and line order. Save incomplete drafts. Debounce autosave at about 900 ms. Flush pending work on navigation and normal close. A failed flush offers retry or explicit discard while preserving the editor state.
-- Show saving, saved, and error status. After an interrupted session offer to resume the last durably saved draft or leave it in History and start a new one. Serialize saves by draft and prevent stale saves from overwriting a different draft or reviving an issued one.
-- Permit document output for a draft that meets document validation. Put **مسودة** on every draft page. Preview, export, and print consume no permanent number.
-- Validate and recalculate on issue. Persist the invoice and ordered line snapshots, allocate a number, and consume the draft in a single transaction. Begin at `INV-000001`, keep one sequence without a yearly reset, and grow past six digits. A duplicate request for the same draft returns the issued record or reports that it was purged. Failure rolls back issuance and leaves the draft recoverable.
-- Issued records capture customer, date, line names and prices, totals, discount, notes, selected terms, and seller name, phone, address, logo, color, currency code/exponent, and date format. Use those snapshots in History and every re-export after settings or products change. Open issued records read-only.
+## 10. المثبت والتحديث والإصدار
 
-### INV-03 · Find, duplicate, trash, and restore
+يُبنى مثبت x64 لكل مستخدم يمكن تثبيته وتشغيله دون إنترنت، ويضم Runtime والتبعيات والأصول المطلوبة بدل تنزيلها عند التشغيل. يُختبر على Windows 10 و11. عند استخدام محرك مستندات يحتاج WebView2، يُختبر مسار Runtime غير المتصل ضمن المثبت أيضًا.
 
-Sort issued records by invoice date descending and stable ID descending. Search by customer name or invoice number and filter by inclusive date range. Show an Arabic error if the range is inverted. Fetch 25 records at a time. Order drafts by most recently updated and allow an incomplete draft to open directly in the editor.
+التحديث يدوي بتشغيل المثبت الأحدث بعد إغلاق التطبيق وحفظ العمل. تُؤخذ نسخة أمان متحققة قبل تغيير مخطط القاعدة. فشل الترقية يحفظ مسار الاسترداد؛ يرفض التطبيق الأقدم الكتابة على مخطط أحدث غير مدعوم. يبقى تثبيت رعد وبياناته مستقلين عن تطبيقات UA وعن أندرويد.
 
-Duplicating an issued invoice creates an editable draft dated today. Copy customer, phone, item snapshots and prices, currency, discount, notes, and terms. Apply current seller identity and presentation settings when the duplicate is issued. Confirm moving an invoice or draft to Trash. Restore with its original date, status, and number. Require a separate explicit confirmation to permanently delete from Trash. Purging never decreases the number counter or releases an issued number for reuse.
+تُحفظ بيانات العمل خارج ملفات البرنامج. إزالة البرنامج المعتادة تحفظ البيانات والنسخ افتراضيًا، ويُشرح مكانها في الدليل؛ لا تتحول إزالة البرنامج إلى حذف صامت لعمل المستخدم. يُختبر سلوك إعادة التثبيت والوصول المحلي ولا يُفترض أنه يساوي نقل التفعيل عبر نسخة أعمال.
 
-### CAT-01 · Manage and search products
+تُنشر الشيفرة والمثبت في مستودع مستقل عام وGitHub Releases، مع SHA-256 وملاحظات إصدار ودليل عربي وتقرير تحقق. يبقى تتبع العمل المحلي وفق إعدادات `docs/agents/`؛ استخدام GitHub للتوزيع لا يغيّر نظام التذاكر المتفق عليه. تُوثق حالة توقيع المثبت؛ لا يُفترض وجود هوية توقيع مدفوعة أو تحقق مادي لم يحدث.
 
-Store the displayed name, nonnegative base price, optional SKU, timestamps, and soft-delete state. Preserve original Arabic display text. Normalize common Arabic letter variants, diacritics, tatweel, and digit forms for search. Use SQLite FTS5 trigram for terms of at least three characters and a bounded normalized search for shorter terms. Limit inline invoice suggestions to ten results showing name, price, and optional SKU. Debounce by about 150 ms, disregard stale replies, and page or virtualize catalog results. Deleted products disappear from active results and can be restored from Trash.
+## 11. مراحل التنفيذ بعد الاعتماد
 
-### CAT-02 · Import and export workbooks
-
-1. Accept `.xlsx`, `.xls`, and `.ods`. Let the operator select the worksheet and map required name and price columns and an optional SKU column using that sheet’s headers. Read workbook values without executing formulas or macros.
-2. Dry run using physical row numbers and display the proposed action or reason for each row. Cover new products, exact SKU matches, normalized name matches, repeated rows or targets, ambiguous matches, and invalid rows. Prefer an unambiguous exact SKU match. Present ambiguity as a skipped row with an explanation. Ignore entirely empty rows.
-3. Default to adding valid new products and skipping matches. Offer an explicit update mode that also updates unambiguous SKU matches and name-only matches individually confirmed by the user. If the file, sheet, mapping, or catalog state changes after preview, require a new dry run.
-4. Apply the accepted batch in one transaction. Show inserted, updated, skipped, and invalid totals. Cancellation before apply leaves the catalog intact. A failed apply rolls back the batch and reports the error.
-5. Save a valid `.xlsx` import template with Arabic headers and an example. Export all active products or every row matching the current filter across pages. Write normal prices as numeric cells and prices that exceed Excel’s numeric precision as exact decimal text. Write names and SKUs as literal text and preserve Arabic and leading zeros.
-
-### SET-01 · Company and invoice preferences
-
-Provide editable company name, phone, and address, sanitized SVG import and reset, a six-digit HEX brand color, and ordered reusable terms. Default the company fields to blank and the logo to the bundled artwork. Reject blank or duplicate new terms and limit each to 300 characters. Copy selected term text into a draft and issued invoice so later Settings changes do not rewrite it.
-
-Offer EGP, USD, EUR, SAR, and AED at two decimal places for new invoices, defaulting to EGP. Offer `dd/MM/yyyy`, `yyyy-MM-dd`, and `dd-MM-yyyy`, defaulting to `dd/MM/yyyy`. Store dates independently of display format as `YYYY-MM-DD`. Explain that changing the default currency relabels catalog prices without conversion. A draft keeps the currency it started with. If that differs from the active catalog currency, catalog selection can supply the item name and the operator must enter the price in the draft’s currency.
-
-## 4. A4 document and Windows output
-
-### DOC-01 · Preserve the invoice design
-
-Use a versioned snapshot model and a local HTML/CSS template. Match the reference layout with A4 portrait (`210 × 297 mm`), 14 mm padding, white paper, bundled Cairo, company name above the logo, contact details, brand divider, and invoice number/date/customer blocks. The table has continuous line number, item, quantity, price, and total columns. Preserve the brand-colored table heading, alternating light rows, and aligned numeric cells. Put the emphasized grand total inside the table, with subtotal and discount when a discount applies. Place notes and selected terms below. Show company name when available and `page / page count` in the footer. Omit blank optional fields. Escape text, sanitize SVG, and load the entire document from local resources.
-
-### DOC-02 · Paginate once and keep outputs aligned
-
-Wait for fonts and logo before measuring. Lay out based on real content, repeat identity and appropriate table headings, and continue oversized text across pages. Keep the totals together and show them once at the end of the item list. Notes and terms can flow beyond that page. Maintain order and prevent clipping, overlapping footers, blank trailing pages, and loss of characters. Include the draft mark on every draft page.
-
-Use a dedicated local WebView2 with `PrintToPdfStream` to produce a real paginated PDF with selectable Arabic text. Use that PDF for preview, images, and printing. Regenerate it when the selected draft or invoice snapshot changes. Window zoom and display scaling must not change pagination. Keep document controls, system URL headers, and window chrome out of the output. [Microsoft WebView2 print API](https://learn.microsoft.com/en-us/microsoft-edge/webview2/how-to/print).
-
-### DOC-03 · Save, reveal, and print
-
-- Use native dialogs to choose the destination. Save one PDF or one ordered PNG or JPG per page at approximately `1588 × 2246` pixels. Use opaque white backgrounds for JPG. Use names such as `INV-000001.pdf` and `INV-000001-page-001.png`. Use a draft prefix and stable draft key for draft filenames.
-- Confirm collisions before overwrite. Stage the complete set before publishing it to the chosen location. Clean up partial temporary outputs and report any files left behind if publishing fails. Offer **Open containing folder** and **Copy path**. Leave the invoice untouched on cancel, write failure, or insufficient storage.
-- Open the Windows print dialog with printer, range, and copies controls. Render the requested pages of the same PDF with the Windows PDF API and send them one at a time to the selected printer device context. Default to A4 portrait and scale proportionally to fit the printer’s printable area. Distinguish canceled, failed, and handed off to the printer. Verify the physical output separately. [Windows PDF page rendering](https://learn.microsoft.com/en-us/uwp/api/windows.data.pdf.pdfpage?view=winrt-26100), [Windows printer device contexts](https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-output).
-
-## 5. Architecture, backup, and migration
-
-### Application and data boundaries
-
-Use Tauri 2, React, TypeScript, and Vite for the desktop shell and UI. Use Rust for domain logic, SQLite, workbook handling, and Windows adapters. Bundle SQLite with FTS5 trigram, enable WAL and foreign keys, and apply versioned migrations. Run one instance per Windows user and serialize writes. Use a fixed independent product ID, proposed as `com.ua.invoice.desktop`. Store data and backups in per-user locations separate from the installed program. Keep UI and document assets bundled. Restrict the native file layer to application storage and user-selected files or folders. Keep the PDF webview isolated from privileged application commands and remote content.
-
-| Boundary | Contract |
+| المرحلة | مخرجاتها وشروط الانتقال |
 | --- | --- |
-| `saveDraft(draftKey, editablePayload)` | Persist a draft revision and report durable success or a structured error. Inputs include raw quantity, price, and discount text. |
-| `issueDraft(draftKey)` | Return the authoritative issued snapshot or a structured error. The UI supplies neither totals nor the permanent number. |
-| History and catalog queries | Pass search/filter inputs and a bounded page request. Return deterministic pages and exact decimal strings for IDs or amounts. |
-| Workbook preview and apply | Produce a preview ID bound to the input and catalog state. Apply only the reviewed preview, selected strategy, and confirmed rows. |
-| Document service | Resolve a validated draft revision or issued snapshot into a paginated document. Use it for preview, export, and printing. |
-| `inspectBackup(path)` / `restoreBackup(stagedId)` | Inspect a staged copy and return source/version, counts, and warnings. Restore only the inspected payload after confirmation. |
+| 1 — إثبات الجدوى | تثبيت وبداية دون إنترنت على الهدفين، تثبيت اختيار Runtime/PDF، مستند عربي متعدد الصفحات مع معاينة وصور ومسار طباعة، نموذج تصدير أندرويد وتحويل متحقق، وقياس أولي على الجهاز المرجعي. لا يُستكمل البناء الكامل على افتراض أن هذه الحدود تعمل. |
+| 2 — وظائف رعد | المخزون والعملاء والمسودة والإصدار والتحصيل والتصحيح واليوم والأرشفة، واختبارات المجال والمعاملات والاسترجاع على SQLite فعلية. |
+| 3 — النقل والحماية والمستندات | النقل الاختياري وتسليم العمل، النسخ اليومية والاستعادة والانقطاع، التفعيل والقفل والاسترداد، وتطابق PDF/الصور/الطباعة. |
+| 4 — تحقق الإصدار | الأداء المستهدف، طابعة A4 فعلية، تثبيت نظيف على النظامين، ترقية بيانات ممتلئة، دليل عربي ومثبت وبصمته وتقرير يذكر كل نتيجة أو بند معلّق. |
 
-### BAK-01 · Create and retain backups
+مطلوب قبل وصف v1 بأنه متحقق: نجاح معايير القبول المطلوبة. يمكن إصدار معاينة تطوير موصوفة بوضوح، لكن البنود غير المختبرة تظل معلّقة ولا تُسجل كنجاح.
 
-Take a SQLite-consistent copy with the Online Backup API. Write a ZIP containing `invoice.db`, optional `brand/logo.svg`, and `manifest.json` with product identifier, archive format version, database schema version, app version, UTC creation time, and SHA-256 checksums for payload files. Keep the active brand with the data generation so activation cannot pair one dataset with another seller’s assets. Verify the archive before exposing it as complete. Show last successful backup time, file size, and local backup list. A failure leaves the last-success marker intact.
+## 12. مصفوفة القبول
 
-Manual backups can be saved outside the app. Automatic backup defaults to off. When enabled, run once per local calendar day at first launch or when the app next gains focus. Default to keeping seven automatic backups and retry a failed due run on a later eligible launch or focus. Retention applies only to automatic backups created by this app. Preserve manual exports and the latest pre-restore safety copy.
-
-### BAK-02 · Accept three backup families
-
-| Source | Detection and conversion |
+| المجال | الدليل المطلوب |
 | --- | --- |
-| **New Windows clone** | Require the clone product identifier, supported format and schema versions, and valid payload checksums. Migrate a staged copy when schema advances. |
-| **UA Invoices for Android** | Accept manifest `format: 1` and database schemas **1–3**, checking Android schema markers and agreement with the manifest. Validate `invoice.db` and any `brand/logo.svg` against the `checksums` map. Transfer portable settings, editable drafts, and issuance state. Preserve draft Trash where supported by the source schema. |
-| **Original UA Invoices for Windows** | Accept its ZIP of `invoice.db` and optional `brand/logo.svg`, without a manifest. Support schemas **v1–v3**. Inspect expected table and column shape and check migration metadata when present. Use empty terms in v1 and zero discount in v1–v2. Convert both persisted invoice drafts and the editor recovery payload into editable drafts. |
+| العمل دون إنترنت | إنشاء صنف وعميل، إضافة مخزون وتصحيحه، مسودة ناقصة واسترجاع بعد الإيقاف، إصدار مرة واحدة وتحصيل وتصحيح وأرشفة واستعادة بعد فصل الشبكة |
+| المال والمخزون | أرقام عربية وفارسية وغربية، مدخلات ناقصة وحدود وفيض وصفر، منع مخزون سالب، إعادة تحقق داخل الإصدار، ومنع تكرار الخصم/الإلغاء/التحصيل |
+| تاريخ البيع | منع الحذف النهائي، بقاء لقطات البيع، منع إلغاء فاتورة ذات تحصيل فعال، تصحيح بقيد عكسي وسبب وتاريخ تحصيل أصلي |
+| اليوم والعملاء | فصل المبيعات والتحصيلات، حدود اليوم المحلي، تصحيح في يوم لاحق، أسماء عملاء مكررة ومعرفات مستقرة وروابط رصيد غير معروف |
+| المستندات | 1/30/100/300 سطر، عربية ونص مختلط قابل للاستخراج، تطابق الصفحات والأرقام، إجمالي واحد، ملخص سداد مؤرخ، وتغير حالة السداد دون تعديل حقائق البيع |
+| الملفات والطباعة | PDF/PNG/JPG، استبدال وإلغاء وفشل حفظ، نطاق وصفحات ونسخ، Microsoft Print to PDF، وطابعة A4 فعلية باسم وطراز وتعريف موثق |
+| النقل | ملف حقيقي من مُصدّر أندرويد مع بيانات اصطناعية، المخطط المدعوم، حفظ المراجع والأرشيف والمسودة، مقارنة الأعداد والمخزون والتحصيل والمتبقي وآثار الحذف القديمة |
+| النسخ والاستعادة | تدوير اليوم أثناء التشغيل، فشل وإعادة محاولة، سبع نسخ متحققة مع حماية اليدوي ونسخة الأمان، رفض تلف/مسارات غير آمنة، وانقطاع أثناء التبديل مع استرجاع متين |
+| التفعيل والقفل | تفعيل دون إنترنت، قفل اختياري وقفل جلسة ويندوز، استرداد بالرمز، فقد الاثنين، وعدم تغيير قفل/تفعيل الوجهة بنقل بيانات العمل |
+| الأداء | القياسات والأحجام والعتاد والطريقة والمعايير الواردة في القسم 9، مع احتساب العمليات المساعدة |
+| الوصول والتثبيت | كيبورد وNarrator وRTL وDPI، تثبيت غير متصل على النظامين، تحديث بيانات ممتلئة، تحقق نسخة الأمان والبصمة وحفظ البيانات عند إزالة البرنامج المعتادة |
 
-Preserve products, SKU and price values, deletion state, invoice numbers and ordered lines, seller and currency snapshots, discount and saved totals, notes, terms, dates, drafts, and portable settings. Preserve each issued record’s stored values during migration. Keep platform-specific backup destinations, backup scheduling, and updater preferences local to the new app. Use available issue records to keep consumed drafts out of the editable list, even when the corresponding invoice was purged. Reject a required record that cannot be converted and identify the failure during inspection.
+## 13. مرجع المطابقة والتسليم
 
-Keep the counter at least as high as the current destination counter, imported counter, imported invoice numbers, and available imported issue history. For example, a known maximum of 50 makes the next issue `INV-000051`. A fresh installation can carry forward the numbers known to its backup. Two independently active installations may issue overlapping numbers after a transfer. The Arabic guide must explain how to choose one active installation when numbering continuity matters.
+المصدر الوظيفي الذي روجع: مشروع `raad-inventory` عند commit `286bc94edd331f5d4ba45abc1348516a61538381`، بتاريخ هذه الوثيقة. تُراجع الفروق إذا تغير المصدر قبل التنفيذ؛ لا يُستبدل المرجع تلقائيًا بسلوك أحدث أو بوثيقة قديمة مخالفة للكود.
 
-### BAK-03 · Restore with rollback
-
-1. Read the archive into private staging. Enforce compressed and expanded size limits and reject unexpected entries, duplicate paths, unsafe SVG, malformed data, corrupt SQLite, checksum mismatch, and unsupported schemas. Validate SQLite integrity and foreign keys. Check required domain fields as part of staging.
-2. Show source, version, creation date if known, record counts including Trash, and any compatibility warnings. State that restore replaces the destination dataset. Let the operator cancel before replacement.
-3. After confirmation, pause writes and autosave and make a verified safety backup. Migrate the staged dataset, build derived indexes, verify it again, and persist the destination number high-water mark in the staged database.
-4. Activate on the same volume using a durable restore journal and an atomic switch to the validated data generation. After an interruption, reopen either the complete prior generation or the complete validated replacement. On error, keep the safety backup and source archive available and show an actionable Arabic error.
-
-## 6. Installer, release, and implementation order
-
-- Build a per-user NSIS `.exe` on Windows x64. Embed the offline WebView2 installer so a compatible clean machine can install without downloading a runtime. Confirm the installer works as a standard user on the two target Windows versions. Keep the identity and install family stable after the first release. [Tauri Windows installer guide](https://v2.tauri.app/distribute/windows-installer/).
-- Publish the tested installer to the **new public GitHub repository’s Releases page**, along with SHA-256, a versioned release note, and the Arabic guide. A GitHub Actions build can produce release assets from a version tag. Keep the repository URL configurable until the owner creates it. Use Windows Authenticode signing when the owner provides a signing identity. If the installer is unsigned, state that in the release notes and document the Windows prompt. Keep real customer data and signing credentials out of source, fixtures, and release artifacts.
-- Upgrade by running the newer setup over the installed version after closing the app. Save pending work before normal shutdown. Take a verified pre-migration backup before applying schema changes. Fail safely if migration fails or an older binary encounters a newer database schema. Show the installed version and document upgrade and recovery steps in Arabic.
-
-| Milestone | Exit criteria |
+| المرجع داخل مشروع أندرويد | الاستخدام |
 | --- | --- |
-| **1. Windows feasibility** | Install an x64 package offline, render a real Arabic multipage A4 PDF with bundled assets, open native Print, rasterize the PDF, and stage one backup from each existing app. |
-| **2. Product workflows** | Complete invoice, catalog, settings, workbook, document, and backup workflows. Pass exact arithmetic, persistence, restore, and source migration tests on real SQLite. |
-| **3. Release verification** | Complete physical print and both Windows targets, confirm upgrade from populated data, verify coexistence with the original Windows installer, and trace release checksums to the tested build. |
+| `GLOSSARY.md` و`Docs/adr/0001-correct-payments-with-reversals.md` | المصطلحات ودلالة التصحيح |
+| `src/data/core.ts` و`src/data/records.ts` | المخطط الحالي والمدخلات والأصناف والعملاء وحركة المخزون |
+| `src/data/checkout.ts` | المسودة والإصدار ولقطات البيع والمراجع والتحقق الذري |
+| `src/data/ledger.ts` | التحصيل والعكس والروابط والإلغاء واليوم، مع استثناء الحذف النهائي هنا |
+| `src/ui/checkout.tsx` و`src/ui/invoice-entry.tsx` | حفظ المدخلات واسترجاع الإصدار المنقطع |
+| `src/sharing/invoice-export.ts` و`src/sharing/native-files.ts` | محتوى فاتورة رعد والعربية والتصدير، مع إضافات ويندوز المعتمدة |
 
-Deliver source and lockfiles, migrations, deterministic synthetic fixtures, build and release instructions, the installer, checksum, release notes, Arabic user guide, and a verification report. The user guide covers installation, in-place upgrade, backup to an external destination, restore replacement, Android and legacy Windows migration, numbering continuity, draft marking, and printing. The report names the Windows versions, hardware or VM, printer, tested build, and any outstanding checks.
+مخرجات التسليم: شيفرة ويندوز وملفات تثبيت الإصدارات والتبعيات، ترقيات القاعدة، بيانات اختبار اصطناعية، تحديث مُصدّر أندرويد، تعليمات البناء والإصدار، مثبت Windows وبصمته، دليل عربي، وملاحظات إصدار وتقرير تحقق. لا توضع بيانات عملاء حقيقية أو أسرار في المستودع العام.
 
-## 7. Acceptance matrix
+الدليل يشمل انتقال العمل من الهاتف، والنسخ إلى وسيط خارجي، والاستعادة التي تستبدل البيانات، والتحديث، والتفعيل والقفل والاسترداد، والطباعة، وحدود المرتجعات والمزامنة والإصدار الأول.
 
-| Gate | Evidence required before v1 release |
+## 14. تتبّع القرارات وحالة الاعتماد
+
+| الأسئلة المعتمدة | موضعها في الوثيقة |
 | --- | --- |
-| **Offline operation** | Install from a previously downloaded file with networking disabled. Create one catalog line and one manual line, save an incomplete draft, force-close and recover it, add discount/notes/terms, issue it once, reopen it, duplicate it, and trash and restore it. Verify an autosave failure and an issue retry. |
-| **Financial correctness** | Run the two arithmetic examples, Arabic and Persian digits, decimal separators, quantity scaling, zero price, invalid percentage and fixed discount, overflow, and values larger than JavaScript’s safe integer range. Change seller, currency, and product settings after issue and compare the original saved invoice and History. |
-| **Catalog and workbook** | Import the 10,000-product fixture and measure search p95 below 200 ms, excluding debounce, on a documented Windows reference PC. Exercise short and variant Arabic queries, ambiguous matches, selected sheet header changes, stale previews, transaction rollback, and export across every matching page. |
-| **Document consistency** | Use 1-, 30-, 100-, and 300-line fixtures with long Arabic names, mixed scripts, notes, terms, and discounts. Compare page counts, order, and content in preview, extracted PDF text, PNG/JPG, and printed copies. Check one grand total, each item exactly once, page labels, no clipping, and a draft mark on every draft page. Test save failure, normal and selected print ranges, cancel, Microsoft Print to PDF, and a physical A4 printer. |
-| **Backup and migration** | Round-trip a clone backup. Import fixture coverage for Android schemas 1–3 and legacy Windows schemas 1–3, plus one genuinely exported archive from each existing app. Compare record counts, historical totals, identity, drafts, Trash, and the next invoice number. Test corruption, denied writes, low space, interruption during activation, and a restore after clean installation. |
-| **Accessibility and desktop** | Test keyboard-only invoice entry, focus and modal return, Windows Narrator, bidi text, and reachable actions at 100%, 125%, 150%, and 200% DPI scaling. |
-| **Installer and upgrades** | Clean-install on Windows 11 x64 and Windows 10 22H2 x64, including the embedded runtime path. Populate invoices, drafts, catalog, and settings, then upgrade in place with the next setup file. Confirm the original Windows app remains independently usable and the published hash matches the tested installer. |
+| 1–3: وظائف رعد والجهاز والاستخدام المحلي | 1–4 و9 |
+| 4: C#/WPF/SQLite | 9 و11 |
+| 5 و10: نقل أندرويد ومُصدّر محدود | 7 |
+| 6: PDF/PNG/JPG وطباعة A4 | 5 |
+| 7 و19: النسخ والاستعادة والتشغيل الطويل | 6 |
+| 8 و14 و20: التفعيل والقفل ونطاق الحماية والاسترداد | 8 |
+| 9 و13: حفظ الفواتير وحدود الإلغاء والمرتجعات | 4 |
+| 11: مسودة واحدة ونطاق رعد وتأجيل إضافات UA | 2 و4 |
+| 12: حالة السداد المحدثة في التصدير | 5 |
+| 15: أهداف الأداء | 9 و12 |
+| 16: المثبت والتحديث والتوزيع العام | 10 |
+| 17–18: تسليم العمل والتاريخ الناقص القديم | 7 |
 
-## 8. Source references for the new repository
-
-The paths below are relative to their respective source repositories. Copy this PRD into the new project as the product and implementation baseline.
-
-| Source repository | Reference | Use |
-| --- | --- | --- |
-| `ua-apk-invoices` (`d6a7644`) | `mobile-app-PRD.md` and `docs/VERIFICATION.md` | Original mobile intent, shipped behavior, and platform verification limits. |
-| `ua-apk-invoices` (`d6a7644`) | `src/domain/invoice.ts`, `src/domain/decimal.ts`, and `src/db/draft.ts` | Exact arithmetic, parsing, and draft model. |
-| `ua-apk-invoices` (`d6a7644`) | `src/document/render.ts` and `src/document/paginateScript.ts` | Arabic A4 design, template content, and measured pagination reference. |
-| `ua-apk-invoices` (`d6a7644`) | `src/db/backup.ts`, `src/db/schema.ts`, and `tests/fixtures/` | Android archive layout, schema revisions, and migration and scale fixtures. |
-| `ua-windows-invoices` (`137babc`) | `Project Docs/Windows_Invoice_Application_PRD.md` and `src-tauri/src/export/windows.rs` | Desktop workflow and Windows WebView2 integration reference. |
-| `ua-windows-invoices` (`137babc`) | `src-tauri/src/db/migrations/` and `src-tauri/src/services/backup.rs` | Legacy Windows schema v1–v3 and backup archive layout. |
-
-The imports from both existing apps and the public installer distribution are product decisions. The x64 targets, Windows version floor, Tauri stack, and desktop identifier are v1 implementation defaults. Establish the final app identifier before creating the first public installer so future releases can preserve its installation and data paths.
+**القرارات التجارية المفتوحة: لا توجد بعد اعتماد إجابات الأسئلة 1–20.** يستخدم نموذج إثبات الجدوى .NET 10 وQuestPDF 2026.9.2. اعتماد هذين الإصدارين للتوزيع مرتبط باستكمال اختبارات التوافق والأداء والطباعة المحددة أعلاه.

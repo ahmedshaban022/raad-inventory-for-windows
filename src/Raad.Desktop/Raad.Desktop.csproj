@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Raad.Inventory.Feasibility</AssemblyName>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Raad.Engine/Raad.Engine.csproj" />
+    <Content Include="Assets/**" Exclude="Assets/Cairo.ttf;Assets/raad-motorcycle.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="Assets/Cairo.ttf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="Assets/raad-motorcycle.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Same font file is embedded as a WPF resource so the shell can use it via pack URI.
+         The Content copy above stays untouched: the PDF engine loads the file from disk. -->
+    <Resource Remove="Assets/Cairo.ttf" />
+    <Resource Include="Assets/Cairo.ttf" />
+    <Resource Include="Assets/raad-motorcycle.png" />
+  </ItemGroup>
+</Project>

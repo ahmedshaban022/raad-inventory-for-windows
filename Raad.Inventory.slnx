@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Raad.Desktop/Raad.Desktop.csproj" />
+    <Project Path="src/Raad.Engine/Raad.Engine.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Raad.Engine.Tests/Raad.Engine.Tests.csproj" />
+  </Folder>
+</Solution>

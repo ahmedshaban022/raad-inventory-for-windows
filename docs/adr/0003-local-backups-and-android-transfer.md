@@ -1,0 +1,9 @@
+# Recover through local backups and an optional one-time Android transfer
+
+The Windows release will support manual backups to a user-selected folder and one successful automatic backup per local calendar day, triggered on launch, focus, or day rollover while the application remains open. A failed due backup is retried later with a visible failure state; retention keeps the latest seven verified complete automatic copies and preserves manual exports and the latest pre-restore safety copy. Restore replaces the destination dataset after creating a verified safety backup; it does not merge business records.
+
+The user also requires an optional one-time import from the existing Raad Android application in v1, preserving stock, invoices, and collection history without ongoing synchronization. Because the inspected Android application has no user-facing recoverable dataset export, the user approved a limited companion Android update that adds export for transfer, initially targeting the current Raad database schema (version 8 at inspection); importing replaces Windows data after confirmation and a safety backup, with file and balance checks before activation. This authorizes the companion feature in the design; implementation and verification follow the completed interview. UA Invoices archives and schema versions are not compatible by assumption.
+
+This favors an inspectable offline transfer and replacement recovery over shared data or synchronization. Copies on the same disk help with application-level recovery; user-selected external copies are needed to recover after disk failure.
+
+At transfer, the operator stops Android business entry when exporting, inspects and reconciles the imported data, and continues entry only in Windows after successful activation of the replacement dataset. Android remains an independent installation; later changes there do not synchronize or merge into Windows.
