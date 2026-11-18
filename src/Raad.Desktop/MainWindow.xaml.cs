@@ -13,6 +13,7 @@ namespace Raad.Desktop;
 public partial class MainWindow : Window
 {
     private const double SideBySideWidth = 780;
+    private const int SearchDebounceMilliseconds = 100;
     private readonly string workspace = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RaadInventory", "Feasibility");
     private readonly InventoryDatabase? database;
     private PdfPages? pdf;
@@ -32,7 +33,7 @@ public partial class MainWindow : Window
         UpdatePageState();
         ContentRendered += async (_, _) =>
         {
-            await SearchProducts();
+            await SearchProducts(debounce: false);
             App.WriteStartupEvidence(Path.Combine(workspace, "startup.json"));
         };
         Closing += (_, args) =>
@@ -100,11 +101,11 @@ public partial class MainWindow : Window
                 priorFocus.Focus();
         }
     }
-    private async void SearchChanged(object sender, TextChangedEventArgs e) => await SearchProducts();
-    private async Task SearchProducts()
+    private async void SearchChanged(object sender, TextChangedEventArgs e) => await SearchProducts(debounce: true);
+    private async Task SearchProducts(bool debounce)
     {
         var revision = ++searchRevision; var query = SearchBox?.Text ?? "";
-        await Task.Delay(150);
+        if (debounce) await Task.Delay(SearchDebounceMilliseconds);
         if (revision != searchRevision) return;
         if (database is null)
         {

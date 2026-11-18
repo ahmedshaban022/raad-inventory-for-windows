@@ -1,6 +1,6 @@
 # Windows feasibility and release evidence
 
-Status: Development-host verification completed for keyboard selection, virtual A4 printing, and Android transfer inspection. Reference-device and physical-print gates remain open.
+Status: Offline installation and launch passed in isolated Windows 10 and 11 guests with 4 GiB RAM. Cold startup exceeded the target in five of six runs. Physical A4 and HDD reference-device verification remain open.
 
 The accepted product and performance requirements are consolidated in
 [the Raad Windows PRD](../../Project%20Doc/windows-clone-PRD.md), with the
@@ -81,6 +81,35 @@ The development host runs Windows 11 Pro x64 (build 26300) on an i7-12700H with 
 A self-contained `win-x64` publish ran the document probe on the development host. The Windows suite passed 22 tests. Android lint, type checking, and all 86 tests passed. The development dataset includes 10,000 products, 100,000 invoices, 1,000,000 invoice items, 1,010,000 stock movements, and 100,000 payments. Its one-customer distribution bounds what can be inferred from it. Across 100 development-host searches, P95 was 3.73 ms and the slowest search was 52.40 ms. In the same process, the 300-line PDF took 121.9 ms to generate and the cumulative peak working set after its PNG and JPG exports was 292.7 MiB. [Probe measurements](../../artifacts/acceptance/verified-publish/probe-results.json).
 
 Physical A4 output, multiple copies on a physical driver, and clean offline installation and performance on the agreed Windows 10 and Windows 11 target hardware with 4 GB RAM remain unverified. A supported Windows edition and an application that runs on a given OS build are separate checks. [Microsoft’s Windows support table](https://learn.microsoft.com/en-us/dotnet/core/install/windows).
+
+## Installation and multiple-copy follow-up
+
+The Windows spooler and present-device inventory exposed three queues on the development host: Microsoft Print to PDF, Send to OneNote, and AnyDesk Printer. No USB or installed network printer was visible.
+
+The A4 portrait job requested two copies of source pages 2–3 from the 100-line invoice. Microsoft Print to PDF completed the job with four A4 pages at 595.276 × 841.890 points. Raster hashes gave the sequence 2, 3, 2, 3. Physical feeding, margins, copy count, and collating remain open. [Two-copy A4 output](../../artifacts/acceptance/qualification/copies-virtual.pdf).
+
+A per-user feasibility installer now packages the self-contained x64 application, SQLite native library, QuestPDF, and Cairo. The unsigned candidate built with Inno Setup 6.4.3 has SHA-256 `7D99DFBEFF26D64ECD837365B1B25F6FAA07527F38C4693AB1F359CFFE4507F3`. It installed in 10.31 seconds on the Windows 11 development host and the runtime trace showed CoreCLR loading from the installation directory. The installed document and SQLite probe exited successfully, and uninstall left the separate fixture database intact. The development host had network connectivity during this run. [Installer](../../artifacts/acceptance/qualification/installer-final/Raad-Inventory-Feasibility-win-x64.exe), [installer source](../../scripts/Raad.Feasibility.iss), and [installation results](../../artifacts/acceptance/qualification/host-final-install-result.json).
+
+The Windows 11 development host reached its usable-window marker in 2.78 seconds with warm caches before tuning. A 100-query WPF test measured from input change to the matching row's completed layout. Reducing the search delay from 150 to 100 ms and starting the initial load immediately lowered P95 from 224.4 to 179.5 ms. The tuned run peaked at 337.1 MB working set and 255.1 MB private bytes. The 300 MB ordinary-use memory gate remains open on the reference device. [Before tuning](../../artifacts/acceptance/qualification/host-ui-inprocess.json) and [after tuning](../../artifacts/acceptance/qualification/host-ui-inprocess-tuned.json).
+
+### Offline Windows 10 and 11 guests
+
+Both QEMU 11.1.0 guests used WHPX acceleration, an NVMe-backed virtual disk, two vCPUs, and 4 GiB allocated RAM (4,288,389,120 usable bytes). Each guest reported zero network adapters. A standard local account installed the same candidate from read-only media on each clean x64 guest, with no preinstalled .NET Desktop Runtime. Both launched on the bundled .NET 10.0.13. [Windows 10 test log](../../artifacts/acceptance/qualification/windows10-qualification.jsonl) and [Windows 11 test log](../../artifacts/acceptance/qualification/windows11-qualification.jsonl).
+
+| Measured result | Windows 10 Enterprise LTSC Evaluation, build 19044 | Windows 11 Enterprise LTSC Evaluation, build 26100 |
+| --- | ---: | ---: |
+| Clean offline installation | Passed, 15.62 s | Passed, 13.43 s |
+| Cold launch to usable window, three guest restarts | 8.62 s, 6.99 s, 6.31 s | 9.52 s, 5.69 s, 4.83 s |
+| Cold launch within 5 s | 0/3 | 1/3 |
+| WPF search P95, 100 queries (budget 200 ms) | 139.1 ms | 142.2 ms |
+| Peak working set during WPF search (budget 300 MB) | 178.8 MB | 185.3 MB |
+| SQLite search P95, 100 queries | 26.6 ms | 37.8 ms |
+| 300-line PDF generation (28 pages) | 268.1 ms | 87.5 ms |
+| Peak working set after PDF, PNG, and JPG export | 220.6 MB | 224.4 MB |
+
+Cold startup uses elapsed time from application process creation through initial product loading and the usable-window marker. Each sample followed a guest restart and a 25-second desktop settling interval. The WPF search test includes the 100 ms input delay and ends when the matching row is laid out. A separate test driving the installed UI and polling accessibility results from another process observed P95 of 394.3 ms and 253.8 ms for Windows 10 and 11 respectively, with zero child processes. This measure includes cross-process observation. Both guests used the same SQLite fixture described above. [Windows 10 WPF timings](../../artifacts/acceptance/qualification/windows10-light-probe.json) and [Windows 11 WPF timings](../../artifacts/acceptance/qualification/windows11-light-probe.json).
+
+The offline deployment check passed for these two editions. The cold-start target failed in the guests, and the PRD's performance gate on the dual-core, 4 GB, HDD reference hardware remains open. Physical A4 output and collation of two copies are blocked on a physical printer. The PDF spooler evidence above covers A4 size, range, and copy order on the virtual driver.
 
 ## Primary technical references
 
