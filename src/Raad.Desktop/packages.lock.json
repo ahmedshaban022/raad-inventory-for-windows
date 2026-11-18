@@ -59,6 +59,18 @@
           "QuestPDF": "[2026.9.2, )"
         }
       }
+    },
+    "net10.0-windows10.0.19041/win-x64": {
+      "QuestPDF": {
+        "type": "Transitive",
+        "resolved": "2026.9.2",
+        "contentHash": "Nc7nvV/CmL/lonuw1mTQbiETfU7EZoM2kZ9YRgdbC5VivVjxsMHPJ18g4t5FMx/jUGh6XpJXFfW1rFWvAYOeTg=="
+      },
+      "SQLitePCLRaw.lib.e_sqlite3": {
+        "type": "Transitive",
+        "resolved": "2.1.13",
+        "contentHash": "D2UAuiGxFYBqeRXjjjGgvJ5UQifzn6wefmSqeKU7XcNGKLbJRP6X7kcPZ6opOBJGdCIlgbSxTvDpBbLvsN594A=="
+      }
     }
   }
 }

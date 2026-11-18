@@ -1,9 +1,27 @@
-<Window x:Class="Raad.Desktop.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  Title="رعد — نموذج إثبات الجدوى" Width="1180" Height="720" MinWidth="360" MinHeight="240"
-  WindowStartupLocation="CenterScreen" Foreground="{StaticResource Raad.Text.Primary}"
-  Background="{StaticResource Raad.Surface.App}" FlowDirection="RightToLeft"
-  FontFamily="{StaticResource Raad.Font.Cairo}" FontSize="{StaticResource Raad.Font.Body}"
-  UseLayoutRounding="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
+<Window x:Class="Raad.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="رعد — المخزون والمبيعات" Height="760" Width="1240" MinWidth="900" MinHeight="600"
+        FlowDirection="RightToLeft" Background="{StaticResource Raad.Surface.App}"
+        WindowStartupLocation="CenterScreen">
+  <Window.Resources>
+    <Style x:Key="Raad.CardTitle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{StaticResource Raad.Text.Secondary}"/>
+    </Style>
+    <Style x:Key="Raad.StatValue" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+      <Setter Property="FontSize" Value="24"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="{StaticResource Raad.Brand.Deep}"/>
+    </Style>
+    <Style x:Key="Raad.NavButton" TargetType="Button" BasedOn="{StaticResource Raad.Button.Secondary}">
+      <Setter Property="Padding" Value="16,8"/>
+      <Setter Property="Margin" Value="0,0,0,6"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+  </Window.Resources>
 
   <Grid>
     <Grid.RowDefinitions>
@@ -12,181 +30,365 @@
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
-    <!-- Brand header -->
-    <Border Grid.Row="0" Background="{StaticResource Raad.Surface.Card}"
-            BorderBrush="{StaticResource Raad.Border.Subtle}" BorderThickness="0,0,0,1">
-      <Grid Margin="18,10">
+    <!-- Header -->
+    <Border Grid.Row="0" Background="{StaticResource Raad.Brand.Deep}" Padding="18,12">
+      <Grid>
         <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-          <Border Width="44" Height="36" CornerRadius="8" Background="{StaticResource Raad.Surface.Subtle}">
-            <Image Source="/Raad.Inventory.Feasibility;component/Assets/raad-motorcycle.png"
-                   FlowDirection="LeftToRight" Height="28" Stretch="Uniform" Margin="4"/>
-          </Border>
-          <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-            <TextBlock Text="رعد" FontSize="19" FontWeight="Bold" Foreground="{StaticResource Raad.Brand.Deep}"/>
-            <TextBlock Text="بيانات اختبار فقط" FontSize="12" Foreground="{StaticResource Raad.Text.Muted}"/>
-          </StackPanel>
+        <Image Grid.Column="0" Source="pack://application:,,,/Assets/raad-motorcycle.png" Height="40" Width="52" Stretch="Uniform"/>
+        <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+          <TextBlock Text="رعد — المخزون والمبيعات" Foreground="White" FontSize="19" FontWeight="Bold"/>
+          <TextBlock x:Name="HeaderSubtitle" Foreground="#CFE3D6" FontSize="12"/>
         </StackPanel>
-
-          <Button x:Name="InspectButton" Grid.Column="1" Content="فحص نقل من أندرويد" Style="{StaticResource Raad.Button.Secondary}"
-                  Click="InspectTransfer" AutomationProperties.AutomationId="InspectTransfer"
-                  AutomationProperties.Name="فحص ملف نقل من أندرويد" Padding="12,6" Margin="12,0,0,0" VerticalAlignment="Center"/>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock x:Name="ActivationBadge" Foreground="#CFE3D6" VerticalAlignment="Center" Margin="0,0,12,0"/>
+          <Button x:Name="LockButton" Content="قفل الخصوصية" Style="{StaticResource Raad.Button.Secondary}"
+                  Click="LockButton_Click"/>
+        </StackPanel>
       </Grid>
     </Border>
 
-    <!-- Workspace -->
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                  Padding="18,16,18,8" Focusable="False">
-      <Grid x:Name="WorkspaceLayout" SizeChanged="WorkspaceSizeChanged">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="1.05*"/>
-          <ColumnDefinition x:Name="PanelColumnGap" Width="16"/>
-          <ColumnDefinition x:Name="InvoiceColumn" Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition x:Name="PanelRowGap" Height="0"/>
-          <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Grid x:Name="AppContent" Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="170"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
 
-        <!-- Product search and work area -->
-        <Border Grid.Column="0" Style="{StaticResource Raad.Card}">
-          <Grid Margin="16">
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto"/>
-              <RowDefinition Height="Auto"/>
-              <RowDefinition Height="Auto"/>
-              <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+      <!-- Navigation -->
+      <Border Grid.Column="0" Background="{StaticResource Raad.Surface.Card}" BorderBrush="{StaticResource Raad.Border.Subtle}" BorderThickness="0,0,1,0" Padding="12,16">
+        <StackPanel>
+          <Button x:Name="TodayNavButton" Style="{StaticResource Raad.NavButton}" Content="اليوم" Click="Navigate_Click" Tag="Today"/>
+          <Button x:Name="InventoryNavButton" Style="{StaticResource Raad.NavButton}" Content="المخزون" Click="Navigate_Click" Tag="Inventory"/>
+          <Button x:Name="InvoicesNavButton" Style="{StaticResource Raad.NavButton}" Content="الفواتير" Click="Navigate_Click" Tag="Invoices"/>
+          <Button x:Name="CustomersNavButton" Style="{StaticResource Raad.NavButton}" Content="العملاء" Click="Navigate_Click" Tag="Customers"/>
+          <Button x:Name="SettingsNavButton" Style="{StaticResource Raad.NavButton}" Content="الإعدادات" Click="Navigate_Click" Tag="Settings"/>
+          <Separator Margin="0,10"/>
+          <TextBlock x:Name="NavStatus" Style="{StaticResource Raad.CardTitle}" TextWrapping="Wrap" Foreground="{StaticResource Raad.Text.Muted}"/>
+        </StackPanel>
+      </Border>
 
-            <StackPanel Grid.Row="0">
-              <TextBlock Text="الأصناف" FontSize="20" FontWeight="Bold"/>
+      <Grid Grid.Column="1" Margin="16">
+        <!-- ============================ Today ============================ -->
+        <Grid x:Name="TodayPanel" Visibility="Visible">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          <StackPanel Grid.Row="0">
+            <TextBlock Text="ملخص اليوم" Style="{StaticResource Raad.CardTitle}" FontSize="16" Margin="0,0,0,10"/>
+            <UniformGrid Columns="4">
+              <Border Style="{StaticResource Raad.Card}" Padding="16" Margin="0,0,8,0">
+                <StackPanel>
+                  <TextBlock Text="مبيعات اليوم" Style="{StaticResource Raad.CardTitle}"/>
+                  <TextBlock x:Name="TodaySalesValue" Style="{StaticResource Raad.StatValue}" Text="0.00"/>
+                  <TextBlock Text="EGP" Foreground="{StaticResource Raad.Text.Muted}" FontSize="11"/>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Raad.Card}" Padding="16" Margin="0,0,8,0">
+                <StackPanel>
+                  <TextBlock Text="تحصيلات اليوم" Style="{StaticResource Raad.CardTitle}"/>
+                  <TextBlock x:Name="TodayCollectionsValue" Style="{StaticResource Raad.StatValue}" Text="0.00"/>
+                  <TextBlock Text="EGP" Foreground="{StaticResource Raad.Text.Muted}" FontSize="11"/>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Raad.Card}" Padding="16" Margin="0,0,8,0">
+                <StackPanel>
+                  <TextBlock Text="إجمالي المديونيات" Style="{StaticResource Raad.CardTitle}"/>
+                  <TextBlock x:Name="OutstandingValue" Style="{StaticResource Raad.StatValue}" Text="0.00"/>
+                  <TextBlock x:Name="OpenInvoicesValue" Foreground="{StaticResource Raad.Text.Muted}" FontSize="11"/>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Raad.Card}" Padding="16">
+                <StackPanel>
+                  <TextBlock Text="رصيد غير مرتبط بعميل" Style="{StaticResource Raad.CardTitle}"/>
+                  <TextBlock x:Name="UnidentifiedValue" Style="{StaticResource Raad.StatValue}" Text="0.00"/>
+                  <TextBlock Text="EGP" Foreground="{StaticResource Raad.Text.Muted}" FontSize="11"/>
+                </StackPanel>
+              </Border>
+            </UniformGrid>
+          </StackPanel>
+          <Border Grid.Row="1" Style="{StaticResource Raad.Card}" Padding="16" Margin="0,16,0,0">
+            <StackPanel>
+              <TextBlock Text="ملاحظات" Style="{StaticResource Raad.CardTitle}" Margin="0,0,0,8"/>
+              <TextBlock x:Name="TodayNotes" TextWrapping="Wrap" Foreground="{StaticResource Raad.Text.Secondary}"/>
             </StackPanel>
+          </Border>
+        </Grid>
 
-            <StackPanel Grid.Row="1" Margin="0,12,0,0">
-              <Label Target="{Binding ElementName=SearchBox}" Content="ابحث باسم الصنف"/>
-              <TextBox x:Name="SearchBox" TextChanged="SearchChanged"
-                       AutomationProperties.AutomationId="ProductSearch" AutomationProperties.Name="بحث الأصناف"/>
-            </StackPanel>
-
-            <TextBlock x:Name="SearchStatus" Grid.Row="2" Margin="0,8,0,0" FontSize="12.5"
-                       Foreground="{StaticResource Raad.Text.Muted}" TextWrapping="Wrap"
-                       AutomationProperties.LiveSetting="Polite"
-                       Text="جارٍ البحث في الأصناف التجريبية…"/>
-
-            <Grid Grid.Row="3" Margin="0,8,0,0">
-              <DataGrid x:Name="ProductsGrid" IsReadOnly="True" AutoGenerateColumns="False" HeadersVisibility="Column"
-                        CanUserAddRows="False" EnableRowVirtualization="True" EnableColumnVirtualization="True"
-                        MaxHeight="355" AutomationProperties.Name="نتائج بحث الأصناف" AutomationProperties.AutomationId="ProductResults">
-                <DataGrid.RowStyle>
-                  <Style TargetType="DataGridRow">
-                    <Setter Property="MinHeight" Value="34"/>
-                    <Setter Property="Foreground" Value="{StaticResource Raad.Text.Primary}"/>
-                  </Style>
-                </DataGrid.RowStyle>
-                <DataGrid.Columns>
-                  <DataGridTextColumn Header="الصنف" Binding="{Binding Name}" Width="*"/>
-                  <DataGridTextColumn Header="السعر (ج.م)" Binding="{Binding DisplayPrice}" Width="110"
-                                      CellStyle="{StaticResource Raad.Cell.Latin}" HeaderStyle="{StaticResource Raad.Header.Numeric}"/>
-                  <DataGridTextColumn Header="المتاح" Binding="{Binding Quantity}" Width="80"
-                                      CellStyle="{StaticResource Raad.Cell.Latin}" HeaderStyle="{StaticResource Raad.Header.Numeric}"/>
-                </DataGrid.Columns>
-              </DataGrid>
-              <TextBlock x:Name="EmptyState" Text="لا توجد أصناف مطابقة للبحث."
-                         Foreground="{StaticResource Raad.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                         TextWrapping="Wrap" Margin="20" IsHitTestVisible="False" Visibility="Collapsed"/>
-            </Grid>
-          </Grid>
-        </Border>
-
-        <!-- Invoice panel -->
-        <Border x:Name="InvoicePanel" Grid.Column="2" Style="{StaticResource Raad.Card}">
-          <Grid Margin="16">
+        <!-- ============================ Inventory ============================ -->
+        <Grid x:Name="InventoryPanel" Visibility="Collapsed">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1*"/>
+          </Grid.ColumnDefinitions>
+          <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-              <RowDefinition Height="Auto"/>
-              <RowDefinition Height="Auto"/>
               <RowDefinition Height="Auto"/>
               <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-
-            <StackPanel Grid.Row="0">
-              <TextBlock Text="فاتورة الاختبار" FontSize="20" FontWeight="Bold"/>
-            </StackPanel>
-
-            <!-- Generation group: label + line count + strongest action -->
-            <StackPanel Grid.Row="1" Margin="0,12,0,0">
-              <Label Target="{Binding ElementName=LineCount}" Content="عدد البنود"/>
-              <WrapPanel>
-              <ComboBox x:Name="LineCount" Width="108" SelectedIndex="1" Margin="0,0,0,6"
-                        AutomationProperties.Name="عدد بنود فاتورة الاختبار"
-                        AutomationProperties.AutomationId="InvoiceLineCount">
-                <ComboBoxItem>1</ComboBoxItem>
-                <ComboBoxItem>30</ComboBoxItem>
-                <ComboBoxItem>100</ComboBoxItem>
-                <ComboBoxItem>300</ComboBoxItem>
-              </ComboBox>
-              <Button x:Name="GenerateButton" Content="تجهيز الفاتورة"
-                      Style="{StaticResource Raad.Button.Primary}" Click="GenerateInvoice"
-                      AutomationProperties.AutomationId="GenerateInvoice" AutomationProperties.Name="تجهيز فاتورة اختبار"
-                      Margin="10,0,0,6"/>
-              </WrapPanel>
-            </StackPanel>
-
-            <!-- Preview actions and page navigation -->
-            <WrapPanel Grid.Row="2" Margin="0,6,0,0">
-              <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,6">
-                <Button x:Name="PreviousButton" Content="السابق" Style="{StaticResource Raad.Button.Secondary}"
-                        Click="PreviousPage" IsEnabled="False" Padding="12,6"
-                        AutomationProperties.AutomationId="PreviousPage" AutomationProperties.Name="الصفحة السابقة"/>
-                <TextBlock x:Name="PageLabel" Text="—" FlowDirection="LeftToRight" VerticalAlignment="Center" Margin="10,0"
-                           FontWeight="SemiBold" Foreground="{StaticResource Raad.Text.Primary}"
-                           AutomationProperties.LiveSetting="Polite"/>
-                <Button x:Name="NextButton" Content="التالي" Style="{StaticResource Raad.Button.Secondary}"
-                        Click="NextPage" IsEnabled="False" Padding="12,6"
-                        AutomationProperties.AutomationId="NextPage" AutomationProperties.Name="الصفحة التالية"/>
-              </StackPanel>
-              <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
-                <Button x:Name="PrintButton" Content="طباعة" Style="{StaticResource Raad.Button.Secondary}"
-                        Click="PrintInvoice" IsEnabled="False" Padding="12,6"
-                        AutomationProperties.AutomationId="PrintInvoice" AutomationProperties.Name="طباعة الفاتورة"/>
-                <Button x:Name="ExportButton" Content="حفظ" Style="{StaticResource Raad.Button.Secondary}"
-                        Click="ExportInvoice" IsEnabled="False" Padding="12,6" Margin="8,0,0,0"
-                        AutomationProperties.AutomationId="ExportButton" AutomationProperties.Name="حفظ الفاتورة PDF أو صور"/>
-                <Button x:Name="ZoomButton" Content="تكبير" Style="{StaticResource Raad.Button.Secondary}"
-                        Click="ToggleZoom" IsEnabled="False" Padding="12,6" Margin="8,0,0,0"
-                        AutomationProperties.AutomationId="PreviewZoom"/>
-              </StackPanel>
+            <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+              <TextBox x:Name="ProductSearchBox" Width="240" Margin="0,0,8,0" Tag="ابحث عن صنف"
+                       TextChanged="ProductSearch_Changed" AutomationProperties.Name="بحث الأصناف"/>
+              <Button Content="صنف جديد" Style="{StaticResource Raad.Button.Primary}" Margin="0,0,8,0" Click="NewProduct_Click"/>
+              <Button Content="تعديل" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="EditProduct_Click"/>
+              <Button Content="إضافة مخزون" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="AddStock_Click"/>
+              <Button Content="تصحيح كمية" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="CorrectStock_Click"/>
+              <Button Content="أرشفة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="ArchiveProduct_Click"/>
+              <Button Content="استعادة" Style="{StaticResource Raad.Button.Secondary}" Click="RestoreProduct_Click"/>
+              <CheckBox x:Name="ShowArchivedProductsCheck" Content="عرض المؤرشف" Margin="12,0,0,0" VerticalAlignment="Center" Checked="ShowArchivedProducts_Changed" Unchecked="ShowArchivedProducts_Changed"/>
             </WrapPanel>
+            <DataGrid x:Name="ProductsGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="ProductsGrid_SelectionChanged">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="الاسم" Binding="{Binding Name}" Width="2*"/>
+                <DataGridTextColumn Header="السعر" Binding="{Binding DisplayPrice}" Width="110"/>
+                <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity}" Width="90"/>
+                <DataGridTextColumn Header="حد الانخفاض" Binding="{Binding Threshold}" Width="100"/>
+                <DataGridTemplateColumn Header="الحالة" Width="130">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate><TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Raad.Text.Secondary}"/></DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+              </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+              <Button Content="السابق" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="ProductsPrevious_Click"/>
+              <TextBlock x:Name="ProductsPageLabel" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource Raad.Text.Muted}"/>
+              <Button Content="التالي" Style="{StaticResource Raad.Button.Secondary}" Click="ProductsNext_Click"/>
+            </StackPanel>
+          </Grid>
+          <Border Grid.Column="1" Style="{StaticResource Raad.Card}" Padding="14" Margin="14,0,0,0">
+            <StackPanel>
+              <TextBlock Text="سجل حركة المخزون" Style="{StaticResource Raad.CardTitle}" Margin="0,0,0,8"/>
+              <ListBox x:Name="MovementsList" Height="420" BorderThickness="0" Background="Transparent"/>
+            </StackPanel>
+          </Border>
+        </Grid>
 
-            <!-- Preview -->
-            <Border Grid.Row="3" Background="{StaticResource Raad.Surface.Subtle}" BorderBrush="{StaticResource Raad.Border.Subtle}"
-                    BorderThickness="1" CornerRadius="8" Margin="0,4,0,0" Height="348">
+        <!-- ============================ Invoices ============================ -->
+        <Grid x:Name="InvoicesPanel" Visibility="Collapsed">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="1.1*"/>
+          </Grid.ColumnDefinitions>
+
+          <!-- Draft -->
+          <Border Grid.Column="0" Style="{StaticResource Raad.Card}" Padding="14" Margin="0,0,14,0">
+            <DockPanel>
+              <StackPanel DockPanel.Dock="Top">
+                <TextBlock Text="مسودة البيع الحالية" Style="{StaticResource Raad.CardTitle}" FontSize="16"/>
+                <WrapPanel Margin="0,8,0,0">
+                  <TextBox x:Name="DraftProductSearchBox" Width="180" Margin="0,0,8,0" Tag="ابحث لإضافة صنف" AutomationProperties.Name="بحث صنف للإضافة"
+                           TextChanged="DraftProductSearch_Changed"/>
+                  <ComboBox x:Name="DraftProductCombo" Width="200" Margin="0,0,8,0" DisplayMemberPath="Name" IsEditable="False"
+                            AutomationProperties.Name="الصنف المختار"/>
+                  <Button Content="إضافة للفاتورة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="DraftAddProduct_Click"/>
+                  <ComboBox x:Name="DraftCustomerCombo" Width="170" Margin="0,0,8,0" DisplayMemberPath="Name" IsEditable="False"
+                            AutomationProperties.Name="عميل الفاتورة"/>
+                  <Label Content="المدفوع الأولي" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                  <TextBox x:Name="DraftPaymentBox" Width="110" Margin="0,0,8,0" Tag="المدفوع الأولي" AutomationProperties.Name="المدفوع الأولي"/>
+                  <Button Content="حفظ المسودة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="SaveDraft_Click"/>
+                  <Button Content="إصدار الفاتورة" Style="{StaticResource Raad.Button.Primary}" Margin="0,0,8,0" Click="IssueInvoice_Click"/>
+                  <Button Content="مسح المسودة" Style="{StaticResource Raad.Button.Secondary}" Click="DiscardDraft_Click"/>
+                </WrapPanel>
+              </StackPanel>
+              <Grid DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                <TextBlock x:Name="DraftTotalLabel" FontWeight="Bold" HorizontalAlignment="Right"/>
+              </Grid>
+              <DataGrid x:Name="DraftLinesGrid" AutoGenerateColumns="False" CanUserAddRows="False">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="الصنف" Binding="{Binding Name}" Width="2*" IsReadOnly="True"/>
+                  <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity}" Width="90"/>
+                  <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice}" Width="110"/>
+                  <DataGridTemplateColumn Header="حذف" Width="70">
+                    <DataGridTemplateColumn.CellTemplate>
+                      <DataTemplate><Button Content="حذف" Click="DraftRemoveLine_Click"/></DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
+                </DataGrid.Columns>
+              </DataGrid>
+            </DockPanel>
+          </Border>
+
+          <!-- Archive + preview -->
+          <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Style="{StaticResource Raad.Card}" Padding="14">
+              <DockPanel>
+                <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                  <TextBox x:Name="InvoiceSearchBox" Width="180" Margin="0,0,8,0" Tag="ابحث برقم الفاتورة أو العميل"
+                           TextChanged="InvoiceSearch_Changed" AutomationProperties.Name="بحث الفواتير"/>
+                  <ComboBox x:Name="InvoiceCustomerCombo" Width="160" Margin="0,0,8,0" DisplayMemberPath="Name"
+                            AutomationProperties.Name="تصفية حسب العميل"/>
+                  <Button Content="تصفية" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="FilterInvoices_Click"/>
+                </WrapPanel>
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                  <WrapPanel>
+                    <Button Content="تحصيل دفعة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="AddPayment_Click"/>
+                    <Button Content="تصحيح/عكس دفعة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="ReversePayment_Click"/>
+                    <Button Content="إلغاء الفاتورة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="CancelInvoice_Click"/>
+                    <Button Content="ربط بعميل" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="LinkCustomer_Click"/>
+                    <Button Content="معاينة" Style="{StaticResource Raad.Button.Primary}" Margin="0,0,8,0" Click="PreviewInvoice_Click"/>
+                    <Button Content="طباعة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="PrintInvoice_Click"/>
+                    <Button Content="تصدير" Style="{StaticResource Raad.Button.Secondary}" Click="ExportInvoice_Click"/>
+                  <ComboBox x:Name="InvoicePaymentCombo" Width="230" Margin="0,8,0,0" DisplayMemberPath="Label"
+                            AutomationProperties.Name="دفعة الفاتورة"/>
+                  </WrapPanel>
+                  <TextBlock x:Name="InvoiceDetailLabel" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{StaticResource Raad.Text.Secondary}"/>
+                  <ItemsControl x:Name="InvoiceLinesList" Margin="0,6,0,0"/>
+                  <ItemsControl x:Name="InvoicePaymentsList" Margin="0,6,0,0"/>
+                </StackPanel>
+                <DataGrid x:Name="InvoicesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="InvoicesGrid_SelectionChanged">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="المرجع" Binding="{Binding Reference}" Width="200"/>
+                    <DataGridTextColumn Header="العميل" Binding="{Binding Customer}" Width="1.2*"/>
+                    <DataGridTextColumn Header="التاريخ" Binding="{Binding DisplayDate}" Width="130"/>
+                    <DataGridTextColumn Header="الإجمالي" Binding="{Binding DisplayTotal}" Width="100"/>
+                    <DataGridTextColumn Header="المدفوع" Binding="{Binding DisplayPaid}" Width="100"/>
+                    <DataGridTextColumn Header="المتبقي" Binding="{Binding DisplayBalance}" Width="100"/>
+                    <DataGridTextColumn Header="الحالة" Binding="{Binding DisplayStatus}" Width="110"/>
+                  </DataGrid.Columns>
+                </DataGrid>
+              </DockPanel>
+            </Border>
+            <Border Grid.Row="1" Style="{StaticResource Raad.Card}" Padding="10" Margin="0,14,0,0">
               <Grid>
-                <ScrollViewer x:Name="PreviewScroller" FlowDirection="LeftToRight" Padding="10" Focusable="False"
-                              HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled">
-                  <Image x:Name="PreviewImage" Stretch="Uniform" AutomationProperties.Name="معاينة صفحة الفاتورة"/>
-                </ScrollViewer>
-                <TextBlock x:Name="PreviewPlaceholder" Text="لم تُجهز فاتورة بعد. اختر عدد البنود ثم ابدأ التجهيز."
-                           Foreground="{StaticResource Raad.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                           TextWrapping="Wrap" Margin="24" IsHitTestVisible="False"
-                           AutomationProperties.Name="لا توجد معاينة"/>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <WrapPanel Grid.Row="0">
+                  <Button x:Name="PreviewPreviousButton" Content="السابق" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="PreviewPrevious_Click"/>
+                  <TextBlock x:Name="PreviewPageLabel" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                  <Button x:Name="PreviewNextButton" Content="التالي" Style="{StaticResource Raad.Button.Secondary}" Click="PreviewNext_Click"/>
+                </WrapPanel>
+                <Border Grid.Row="1" Height="220" Background="{StaticResource Raad.Surface.Subtle}" Margin="0,8,0,0">
+                  <Image x:Name="PreviewImage" Stretch="Uniform" />
+                </Border>
               </Grid>
             </Border>
           </Grid>
-        </Border>
-      </Grid>
-    </ScrollViewer>
+        </Grid>
 
-    <!-- Operation feedback -->
-    <Border Grid.Row="2" Background="{StaticResource Raad.Surface.Card}"
-            BorderBrush="{StaticResource Raad.Border.Subtle}" BorderThickness="0,1,0,0" Padding="18,8">
-        <TextBlock x:Name="OperationStatus" Text="جاهز." FontSize="12.5" Foreground="{StaticResource Raad.Text.Secondary}"
-                   TextWrapping="Wrap" VerticalAlignment="Center"
-                   AutomationProperties.LiveSetting="Polite"/>
+        <!-- ============================ Customers ============================ -->
+        <Grid x:Name="CustomersPanel" Visibility="Collapsed">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1*"/>
+          </Grid.ColumnDefinitions>
+          <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+              <TextBox x:Name="CustomerSearchBox" Width="240" Margin="0,0,8,0" Tag="ابحث باسم العميل أو الهاتف"
+                       TextChanged="CustomerSearch_Changed" AutomationProperties.Name="بحث العملاء"/>
+              <Button Content="عميل جديد" Style="{StaticResource Raad.Button.Primary}" Margin="0,0,8,0" Click="NewCustomer_Click"/>
+              <Button Content="تعديل" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="EditCustomer_Click"/>
+              <Button Content="أرشفة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="ArchiveCustomer_Click"/>
+              <Button Content="استعادة" Style="{StaticResource Raad.Button.Secondary}" Click="RestoreCustomer_Click"/>
+              <CheckBox x:Name="ShowArchivedCustomersCheck" Content="عرض المؤرشف" Margin="12,0,0,0" VerticalAlignment="Center" Checked="ShowArchivedCustomers_Changed" Unchecked="ShowArchivedCustomers_Changed"/>
+            </WrapPanel>
+            <DataGrid x:Name="CustomersGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="CustomersGrid_SelectionChanged">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="المرجع" Binding="{Binding Reference}" Width="90"/>
+                <DataGridTextColumn Header="الاسم" Binding="{Binding Name}" Width="2*"/>
+                <DataGridTextColumn Header="الهاتف" Binding="{Binding Phone}" Width="140"/>
+                <DataGridTextColumn Header="الرصيد" Binding="{Binding DisplayBalance}" Width="120"/>
+              </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+              <Button Content="السابق" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="CustomersPrevious_Click"/>
+              <TextBlock x:Name="CustomersPageLabel" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource Raad.Text.Muted}"/>
+              <Button Content="التالي" Style="{StaticResource Raad.Button.Secondary}" Click="CustomersNext_Click"/>
+            </StackPanel>
+          </Grid>
+          <Border Grid.Column="1" Style="{StaticResource Raad.Card}" Padding="14" Margin="14,0,0,0">
+            <StackPanel>
+              <TextBlock Text="أرصدة غير مرتبطة بعميل" Style="{StaticResource Raad.CardTitle}" Margin="0,0,0,8"/>
+              <TextBlock x:Name="UnidentifiedPanelValue" FontWeight="Bold" Margin="0,0,0,8"/>
+              <TextBlock Text="اربط الفاتورة النقدية بعميل من شاشة الفواتير بعد استخراج المبلغ." TextWrapping="Wrap" Foreground="{StaticResource Raad.Text.Muted}"/>
+            </StackPanel>
+          </Border>
+        </Grid>
+
+        <!-- ============================ Settings ============================ -->
+        <ScrollViewer x:Name="SettingsPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+          <StackPanel MaxWidth="820" HorizontalAlignment="Right">
+            <Border Style="{StaticResource Raad.Card}" Padding="16" Margin="0,0,0,12">
+              <StackPanel>
+                <TextBlock Text="النسخ الاحتياطي" Style="{StaticResource Raad.CardTitle}" FontSize="15" Margin="0,0,0,8"/>
+                <WrapPanel>
+                  <Button Content="نسخة احتياطية الآن" Style="{StaticResource Raad.Button.Primary}" Margin="0,0,8,0" Click="ManualBackup_Click"/>
+                  <Button Content="فحص واستعادة نسخة" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="RestoreBackup_Click"/>
+                </WrapPanel>
+                <TextBlock x:Name="BackupStatus" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{StaticResource Raad.Text.Secondary}"/>
+              </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Raad.Card}" Padding="16" Margin="0,0,0,12">
+              <StackPanel>
+                <TextBlock Text="نقل بيانات رعد لأندرويد" Style="{StaticResource Raad.CardTitle}" FontSize="15" Margin="0,0,0,8"/>
+                <WrapPanel>
+                  <Button Content="فحص ملف نقل" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="InspectTransfer_Click"/>
+                  <Button Content="استبدال البيانات بعد الفحص" Style="{StaticResource Raad.Button.Secondary}" Click="ApplyTransfer_Click"/>
+                </WrapPanel>
+                <TextBlock x:Name="TransferStatus" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{StaticResource Raad.Text.Secondary}"/>
+              </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Raad.Card}" Padding="16" Margin="0,0,0,12">
+              <StackPanel>
+                <TextBlock Text="التفعيل وقفل الخصوصية" Style="{StaticResource Raad.CardTitle}" FontSize="15" Margin="0,0,0,8"/>
+                <TextBlock x:Name="AccessStatus" Margin="0,0,0,8" TextWrapping="Wrap" Foreground="{StaticResource Raad.Text.Secondary}"/>
+                <WrapPanel>
+                  <Button Content="تفعيل (إعداد مالك للمعاينة)" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="Activate_Click"/>
+                  <Button Content="تفعيل قفل الخصوصية" Style="{StaticResource Raad.Button.Secondary}" Margin="0,0,8,0" Click="EnableLock_Click"/>
+                  <Button Content="تعطيل قفل الخصوصية" Style="{StaticResource Raad.Button.Secondary}" Click="DisableLock_Click"/>
+                  <Button Content="إعادة ضبط القفل محليًا" Style="{StaticResource Raad.Button.Secondary}" Click="ResetLockLocally_Click"/>
+                </WrapPanel>
+                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{StaticResource Raad.Text.Muted}"
+                           Text="هذه معاينة تطوير: التفعيل هنا إعداد مالك محلي وليس ترخيص منتج. القفل اختياري ولا يشفّر قاعدة البيانات."/>
+              </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Raad.Card}" Padding="16">
+              <StackPanel>
+                <TextBlock Text="عن التطبيق" Style="{StaticResource Raad.CardTitle}" FontSize="15" Margin="0,0,0,8"/>
+                <TextBlock x:Name="VersionText" Foreground="{StaticResource Raad.Text.Secondary}"/>
+                <TextBlock x:Name="DataPathText" Foreground="{StaticResource Raad.Text.Muted}" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+
+    <!-- Status bar -->
+    <Border Grid.Row="2" Background="{StaticResource Raad.Surface.Card}" BorderBrush="{StaticResource Raad.Border.Subtle}" BorderThickness="0,1,0,0" Padding="16,6">
+      <TextBlock x:Name="OperationStatus" Foreground="{StaticResource Raad.Text.Secondary}" TextTrimming="CharacterEllipsis"/>
+    </Border>
+
+    <!-- Privacy lock overlay -->
+    <Border x:Name="LockOverlay" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed" Background="#F2F4EFF2">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="360">
+        <Border Style="{StaticResource Raad.Card}" Padding="20">
+          <StackPanel>
+            <TextBlock Text="قفل الخصوصية" FontSize="18" FontWeight="Bold" Margin="0,0,0,8"/>
+            <TextBlock Text="أدخل كلمة مرور القفل أو رمز الاسترداد للمتابعة." TextWrapping="Wrap" Margin="0,0,0,10"/>
+            <PasswordBox x:Name="LockPasswordBox" MinHeight="34" Padding="8" Margin="0,0,0,10"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+              <Button Content="فتح" Style="{StaticResource Raad.Button.Primary}" Margin="0,0,8,0" Click="Unlock_Click"/>
+              <Button Content="استرداد بالرمز" Style="{StaticResource Raad.Button.Secondary}" Click="UnlockRecovery_Click"/>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
     </Border>
   </Grid>
 </Window>

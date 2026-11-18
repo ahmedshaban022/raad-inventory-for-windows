@@ -54,6 +54,8 @@ public static partial class ExactInput
     }
     public static string Normalize(string value) => Spaces().Replace(value.Normalize(NormalizationForm.FormC).Trim(), " ").ToLowerInvariant();
     public static string FormatMoney(long minor) => (minor / 100m).ToString("N2", CultureInfo.InvariantCulture);
+    /// <summary>Ungrouped money text for editors, because the parser rejects thousands separators.</summary>
+    public static string FormatPlainMoney(long minor) => (minor / 100m).ToString("0.00", CultureInfo.InvariantCulture);
     [GeneratedRegex(@"^(?:\d+(?:\.\d{1,2})?|\.\d{1,2})$", RegexOptions.CultureInvariant)]
     private static partial Regex MoneyPattern();
     [GeneratedRegex(@"^[0-9]+$", RegexOptions.CultureInvariant)]
